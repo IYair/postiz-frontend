@@ -33,6 +33,7 @@ import { SVGLine } from '@gitroom/frontend/components/launches/launches.componen
 import { GlobalSettings } from '@gitroom/frontend/components/settings/global.settings';
 import { ApprovedAppsComponent } from '@gitroom/frontend/components/approved-apps/approved-apps.component';
 import dynamic from 'next/dynamic';
+import { SecurityComponent } from '@gitroom/frontend/components/settings/security.component';
 
 const AiProviderComponent = dynamic(
   () => import('@gitroom/frontend/components/settings/ai-provider.component'),
@@ -114,6 +115,7 @@ export const SettingsPopup: FC<{
     }
     arr.push({ tab: 'ai_providers', label: t('ai_providers', 'AI Providers') });
     arr.push({ tab: 'approved_apps', label: t('approved_apps', 'Approved Apps') });
+    arr.push({ tab: 'security', label: t('security', 'Security') });
 
     return arr;
   }, [user, isGeneral, showLogout, t]);
@@ -221,6 +223,12 @@ export const SettingsPopup: FC<{
               {tab === 'approved_apps' && (
                 <div>
                   <ApprovedAppsComponent />
+                </div>
+              )}
+
+              {tab === 'security' && (
+                <div>
+                  <SecurityComponent />
                 </div>
               )}
             </div>
