@@ -40,7 +40,8 @@ export const getUppyUploadPlugin = (
           },
         },
       };
-    case 'cloudflare': // Force rebuild
+    case 'cloudflare':
+      console.log('[Postiz] Using cloudflare storage provider');
       return {
         plugin: AwsS3Multipart,
         options: {
