@@ -40,7 +40,7 @@ export const getUppyUploadPlugin = (
           },
         },
       };
-    case 'cloudflare':
+    case 'cloudflare': // Force rebuild
       return {
         plugin: AwsS3Multipart,
         options: {
