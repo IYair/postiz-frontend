@@ -595,6 +595,9 @@ importers:
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       stripe:
         specifier: ^20.4.0
         version: 20.4.0(@types/node@18.16.9)
@@ -843,21 +846,7 @@ importers:
         specifier: 3.1.4
         version: 3.1.4(@types/debug@4.1.12)(@types/node@18.16.9)(@vitest/ui@1.6.0)(happy-dom@15.11.7)(jiti@2.6.1)(jsdom@22.1.0(bufferutil@4.1.0)(canvas@2.11.2)(utf-8-validate@5.0.10))(lightningcss@1.31.1)(sass@1.97.3)(terser@5.46.0)(yaml@2.8.3)
 
-  apps/backend: {}
-
-  apps/commands: {}
-
-  apps/extension: {}
-
   apps/frontend: {}
-
-  apps/orchestrator: {}
-
-  apps/sdk:
-    dependencies:
-      node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
 
 packages:
 
@@ -16393,6 +16382,12 @@ packages:
 
   sonic-boom@4.2.1:
     resolution: {integrity: sha512-w6AxtubXa2wTXAUsZMMWERrsIRAdrK0Sc+FUytWvYAhBJLyuI4llrMIC1DtlNSdI99EI86KZum2MMq3EAZlF9Q==}
+
+  sonner@2.0.7:
+    resolution: {integrity: sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==}
+    peerDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4
 
   sort-keys-length@1.0.1:
     resolution: {integrity: sha512-GRbEOUqCxemTAk/b32F2xa8wDTs+Z1QHOkbhJDQTvv/6G3ZkbJ+frYWsTcc7cBB3Fu4wy4XlLCuNtJuMn7Gsvw==}
@@ -37853,6 +37848,11 @@ snapshots:
   sonic-boom@4.2.1:
     dependencies:
       atomic-sleep: 1.0.0
+
+  sonner@2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   sort-keys-length@1.0.1:
     dependencies:

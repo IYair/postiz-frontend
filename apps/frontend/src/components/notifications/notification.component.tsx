@@ -7,35 +7,95 @@ import clsx from 'clsx';
 import { useClickAway } from '@uidotdev/usehooks';
 import ReactLoading from '@gitroom/frontend/components/layout/loading';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-function replaceLinks(text: string) {
-  const urlRegex =
-    /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
-  return text.replace(
-    urlRegex,
-    '<a class="cursor-pointer underline font-bold" target="_blank" href="$1">$1</a>'
-  );
-}
+import { Transition } from '@headlessui/react';
+import { useMediaDirectory } from '@gitroom/react/helpers/use.media.directory';
+
+type Notification = {
+  createdAt: string;
+  content: string;
+  link?: string | null;
+  image?: string | null;
+};
+
+const urlRegex =
+  /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
+
+const getNotificationLink = (notification: Notification) => {
+  return notification.link || notification.content.match(urlRegex)?.[0];
+};
+
+const getNotificationContent = (notification: Notification) => {
+  return notification.content
+    .replace(urlRegex, '')
+    .replace(/\s+at\s*$/i, '')
+    .trim();
+};
+
 export const ShowNotification: FC<{
-  notification: {
-    createdAt: string;
-    content: string;
-  };
+  notification: Notification;
   lastReadNotification: string;
 }> = (props) => {
   const { notification } = props;
+  const t = useT();
+  const mediaDirectory = useMediaDirectory();
   const [newNotification] = useState(
     new Date(notification.createdAt) > new Date(props.lastReadNotification)
   );
+  const link = getNotificationLink(notification);
+  const content = getNotificationContent(notification);
+  const image = notification.image?.includes('.mp4')
+    ? undefined
+    : notification.image;
+
   return (
-    <div
-      className={clsx(
-        `text-textColor px-[16px] py-[10px] border-b border-tableBorder last:border-b-0 transition-colors overflow-hidden text-ellipsis`,
-        newNotification && 'font-bold bg-seventh animate-newMessages'
-      )}
-      dangerouslySetInnerHTML={{
-        __html: replaceLinks(notification.content),
-      }}
-    />
+    <Transition show={true} appear={true}>
+      <div
+        className={clsx(
+          'pointer-events-auto flex w-full rounded-lg bg-gray-800 shadow-lg outline outline-1 -outline-offset-1 outline-white/10 transition data-[closed]:data-[enter]:translate-y-2 data-[enter]:transform data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-100 data-[enter]:ease-out data-[leave]:ease-in data-[closed]:data-[enter]:sm:translate-x-2 data-[closed]:data-[enter]:sm:translate-y-0',
+          newNotification && 'animate-newMessages'
+        )}
+      >
+        <div className="w-0 flex-1 p-4">
+          <div className="flex items-start">
+            <div className="shrink-0 pt-0.5">
+              {image ? (
+                <img
+                  alt=""
+                  src={mediaDirectory.set(image)}
+                  className="size-10 rounded-full bg-gray-800 object-cover outline outline-1 -outline-offset-1 outline-white/10"
+                />
+              ) : (
+                <div className="size-10 rounded-full bg-seventh outline outline-1 -outline-offset-1 outline-white/10" />
+              )}
+            </div>
+            <div className="ml-3 w-0 flex-1">
+              <p
+                className={clsx(
+                  'text-sm font-medium text-white',
+                  newNotification && 'font-bold'
+                )}
+              >
+                {t('notification_update', 'Notification')}
+              </p>
+              <p className="mt-1 line-clamp-3 text-sm text-gray-400">
+                {content || notification.content}
+              </p>
+            </div>
+          </div>
+        </div>
+        {link && (
+          <div className="flex border-l border-white/10">
+            <button
+              type="button"
+              onClick={() => window.open(link, '_blank', 'noopener,noreferrer')}
+              className="flex w-full items-center justify-center rounded-none rounded-r-lg p-4 text-sm font-medium text-indigo-400 hover:text-indigo-300 focus:outline focus:outline-2 focus:outline-indigo-400"
+            >
+              {t('open', 'Open')}
+            </button>
+          </div>
+        )}
+      </div>
+    </Transition>
   );
 };
 export const NotificationOpenComponent = () => {
@@ -57,7 +117,10 @@ export const NotificationOpenComponent = () => {
         {t('notifications', 'Notifications')}
       </div>
 
-      <div className="flex flex-col">
+      <div
+        aria-live="assertive"
+        className="pointer-events-none flex flex-col space-y-4 p-[16px]"
+      >
         {isLoading && (
           <div className="flex-1 flex justify-center pt-12">
             <ReactLoading type="spin" color="#fff" width={36} height={36} />
@@ -70,13 +133,7 @@ export const NotificationOpenComponent = () => {
         )}
         {!isLoading &&
           data.notifications.map(
-            (
-              notification: {
-                createdAt: string;
-                content: string;
-              },
-              index: number
-            ) => (
+            (notification: Notification, index: number) => (
               <ShowNotification
                 notification={notification}
                 lastReadNotification={data.lastReadNotifications}
