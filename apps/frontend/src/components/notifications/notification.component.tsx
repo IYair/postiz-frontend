@@ -119,7 +119,7 @@ export const NotificationOpenComponent = () => {
 
       <div
         aria-live="assertive"
-        className="pointer-events-none flex flex-col space-y-4 p-[16px]"
+        className="pointer-events-none flex max-h-[70vh] flex-col space-y-4 overflow-y-auto p-[16px]"
       >
         {isLoading && (
           <div className="flex-1 flex justify-center pt-12">
