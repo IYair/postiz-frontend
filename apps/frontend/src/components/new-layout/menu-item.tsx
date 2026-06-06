@@ -32,6 +32,7 @@ export const MenuItem: FC<{
           onClick();
           onNavigate?.();
         }}
+        title={label}
         className={className}
       >
         <div className="custom:hidden">{icon}</div>
@@ -44,6 +45,7 @@ export const MenuItem: FC<{
     <Link
       prefetch={true}
       href={path}
+      title={label}
       {...path.indexOf('http') === 0 && { target: '_blank' }}
       className={className}
       onClick={onNavigate}

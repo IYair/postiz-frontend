@@ -773,6 +773,7 @@ export const Editor: FC<{
                       chars={chars}
                       totalChars={valueWithoutHtml.length}
                       totalAllowedChars={props.totalChars}
+                      text={valueWithoutHtml}
                     />
                   }
                   toolBar={

@@ -9,6 +9,7 @@ import { capitalize } from 'lodash';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useIsMobile } from '@gitroom/frontend/components/launches/helpers/use.is.mobile';
 import { BottomSheet } from '@gitroom/frontend/components/ui/bottom.sheet';
+import { hasLinks } from '@gitroom/helpers/utils/strip.links';
 
 const Valid: FC = () => {
   return (
@@ -62,18 +63,39 @@ export const InformationComponent: FC<{
   totalChars: number;
   totalAllowedChars: number;
   isPicture: boolean;
-}> = ({ totalChars, totalAllowedChars, chars, isPicture }) => {
+  text?: string;
+}> = ({ totalChars, totalAllowedChars, chars, isPicture, text }) => {
   const t = useT();
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { isGlobal, selectedIntegrations, internal } = useLaunchStore(
-    useShallow((state) => ({
-      isGlobal: state.current === 'global',
-      selectedIntegrations: state.selectedIntegrations,
-      internal: state.internal,
-    }))
-  );
+  const { isGlobal, selectedIntegrations, internal, currentIntegration } =
+    useLaunchStore(
+      useShallow((state) => ({
+        isGlobal: state.current === 'global',
+        selectedIntegrations: state.selectedIntegrations,
+        internal: state.internal,
+        currentIntegration: state.integrations.find(
+          (p) => p.id === state.current
+        ),
+      }))
+    );
+
+  const stripLinkNames = useMemo(() => {
+    if (!hasLinks(text)) {
+      return [] as string[];
+    }
+
+    if (!isGlobal) {
+      return currentIntegration?.stripLinks ? [currentIntegration.name] : [];
+    }
+
+    return selectedIntegrations
+      .filter((p) => p.integration.stripLinks)
+      .map((p) => p.integration.name);
+  }, [text, isGlobal, currentIntegration, selectedIntegrations]);
+
+  const showStripLinkWarning = stripLinkNames.length > 0;
 
   const isInternal = useMemo(() => {
     if (!isGlobal) {
@@ -89,6 +111,10 @@ export const InformationComponent: FC<{
   }, [isGlobal, internal, selectedIntegrations]);
 
   const isValid = useMemo(() => {
+    if (showStripLinkWarning) {
+      return false;
+    }
+
     if (!isPicture && !totalChars) {
       return false;
     }
@@ -114,7 +140,14 @@ export const InformationComponent: FC<{
     }
 
     return true;
-  }, [totalAllowedChars, totalChars, isInternal, isPicture, chars]);
+  }, [
+    totalAllowedChars,
+    totalChars,
+    isInternal,
+    isPicture,
+    chars,
+    showStripLinkWarning,
+  ]);
 
   const globalDisplayLimit = useMemo(() => {
     if (!isGlobal || !selectedIntegrations.length) {
@@ -139,7 +172,9 @@ export const InformationComponent: FC<{
   }, [isGlobal, selectedIntegrations, chars, isInternal, totalChars]);
 
   const hasDetail =
-    (isGlobal && selectedIntegrations.length > 0) || !isValid;
+    (isGlobal && selectedIntegrations.length > 0) ||
+    !isValid ||
+    showStripLinkWarning;
 
   const detailContent = (
     <>
@@ -198,6 +233,19 @@ export const InformationComponent: FC<{
               </div>
             </Fragment>
           ))}
+        </div>
+      )}
+      {showStripLinkWarning && (
+        <div
+          className={clsx(
+            'text-sm text-[#FF3F3F] whitespace-nowrap',
+            ((isGlobal && selectedIntegrations.length) ||
+              (!isPicture && !totalChars)) &&
+              'mt-[12px]'
+          )}
+        >
+          {t('links_will_be_removed_from', 'Links will be removed from')}:{' '}
+          {stripLinkNames.join(', ')}
         </div>
       )}
     </>
