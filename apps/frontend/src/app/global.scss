@@ -716,7 +716,10 @@ html[dir='rtl'] [dir='ltr'] {
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 32%),
     var(--new-bgColor);
   color: rgb(var(--new-textColor));
+  height: 100%;
   isolation: isolate;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-panel {
@@ -817,12 +820,16 @@ html[dir='rtl'] [dir='ltr'] {
 
 .agent-stage {
   background: var(--new-bgColor);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-surface {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 220px),
     var(--new-bgColor);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-topbar {
@@ -866,6 +873,7 @@ html[dir='rtl'] [dir='ltr'] {
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .agent {
@@ -873,18 +881,24 @@ html[dir='rtl'] [dir='ltr'] {
     background: transparent !important;
     color: rgb(var(--new-textColor));
     font-family: inherit !important;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .copilotKitMessages {
     background: transparent !important;
+    min-height: 0;
     overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
   }
 
   .copilotKitMessagesContainer {
     gap: 18px;
     margin: 0 auto;
     max-width: 830px;
-    padding: 42px clamp(18px, 5vw, 52px) 18px !important;
+    padding: 42px clamp(18px, 5vw, 52px) 24px !important;
     width: 100%;
   }
 
@@ -989,7 +1003,12 @@ html[dir='rtl'] [dir='ltr'] {
 
   .copilotKitInputContainer {
     background: transparent !important;
-    padding: 0 !important;
+    flex: 0 0 auto;
+    padding: 0 clamp(18px, 4vw, 44px) 18px !important;
+    pointer-events: none;
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
   }
 
   .agent-media-portal {
@@ -997,7 +1016,7 @@ html[dir='rtl'] [dir='ltr'] {
   }
 
   .copilotKitInput {
-    width: 100% !important;
+    width: min(760px, 100%) !important;
   }
 
   .agent-composer {
@@ -1007,8 +1026,10 @@ html[dir='rtl'] [dir='ltr'] {
     box-shadow:
       0 14px 44px rgba(0, 0, 0, 0.22),
       inset 0 1px 0 rgb(var(--new-textColor) / 0.04);
+    margin: 0 auto !important;
     min-height: 76px !important;
     padding: 12px 14px 10px !important;
+    pointer-events: auto;
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
 
