@@ -18,7 +18,10 @@ interface PostResult {
   group: string;
   content: string;
   publishDate: string;
+  childrenPost?: Array<{ content: string }>;
 }
+
+const stripHtml = (value: string) => value.replace(/<[^>]+>/g, '');
 
 export const CommandPalette = () => {
   const open = useCommandPaletteStore((s) => s.open);
@@ -122,6 +125,21 @@ export const CommandPalette = () => {
     return Array.from(map.entries());
   }, [staticCommands, ctxCommandList]);
 
+  const getPostLabel = useCallback(
+    (post: PostResult) => {
+      const term = search.trim().toLowerCase();
+      const contents = [
+        post.content,
+        ...(post.childrenPost || []).map((p) => p.content),
+      ];
+      const match = contents.find((content) =>
+        stripHtml(content || '').toLowerCase().includes(term)
+      );
+      return stripHtml(match || post.content || '').slice(0, 120);
+    },
+    [search]
+  );
+
   if (!open) return null;
 
   return (
@@ -181,13 +199,14 @@ export const CommandPalette = () => {
               {postResults.map((post) => (
                 <Cmdk.Item
                   key={post.id}
-                  value={`post-${post.id} ${post.content}`}
+                  value={`post-${post.id} ${post.content} ${(post.childrenPost || [])
+                    .map((child) => child.content)
+                    .join(' ')}`}
                   onSelect={() => openPost(post.group)}
                   className="flex cursor-pointer flex-col gap-[2px] rounded-[8px] px-[12px] py-[10px] text-[14px] normal-case text-textColor data-[selected=true]:bg-forth data-[selected=true]:text-white"
                 >
                   <span className="line-clamp-1">
-                    {post.content?.replace(/<[^>]+>/g, '').slice(0, 80) ||
-                      t('untitled_post', 'Untitled post')}
+                    {getPostLabel(post) || t('untitled_post', 'Untitled post')}
                   </span>
                 </Cmdk.Item>
               ))}
