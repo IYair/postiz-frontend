@@ -160,17 +160,18 @@ export const MiniMonth: FC = () => {
                 'py-1.5 focus:z-10 first:rounded-tl-[10px] last:rounded-br-[10px] [&:nth-child(7)]:rounded-tr-[10px] [&:nth-child(36)]:rounded-bl-[10px]',
                 isCurrentMonth ? 'bg-newBgColor' : 'bg-newBgColor/40',
                 isCurrentMonth ? 'hover:bg-newTableHeader' : 'hover:bg-newTableHeader/60',
-                !isCurrentMonth && !isToday && 'text-textColor/40',
-                isToday && !isSelected && 'font-[600] text-primary',
-                isSelected && 'font-[600]'
+                !isCurrentMonth && !isToday && !isSelected && 'text-textColor/40'
               )}
             >
               <time
                 dateTime={iso}
                 className={clsx(
-                  'mx-auto flex size-7 items-center justify-center rounded-full',
-                  isSelected && isToday && 'bg-primary text-white',
-                  isSelected && !isToday && 'bg-textColor text-newBgColor'
+                  'mx-auto flex size-7 items-center justify-center rounded-full transition-colors',
+                  isSelected
+                    ? 'bg-primary font-[600] text-white'
+                    : isToday
+                    ? 'bg-primary/25 font-[600] text-primary'
+                    : ''
                 )}
               >
                 {date.date()}

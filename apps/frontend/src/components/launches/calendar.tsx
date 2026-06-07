@@ -272,6 +272,7 @@ const usePostActions = (onMutate?: () => void) => {
 export const DayView = () => {
   const calendar = useCalendar();
   const { integrations, posts, startDate } = calendar;
+  const t = useT();
 
   // Set dayjs locale based on current language
   const currentLanguage = i18next.resolvedLanguage || 'en';
@@ -279,6 +280,9 @@ export const DayView = () => {
 
   const currentDay = dayjs.utc(startDate);
 
+  // Only real scheduled posts become slots on the grid. Empty preset-time
+  // rows are dropped so the past "Date passed" bars disappear; creating a
+  // post happens from the dedicated bar under the mini-month.
   const options = useMemo(() => {
     const createdPosts = posts.map((post) => ({
       integration: [integrations.find((i) => i.id === post.integration.id)!],
@@ -291,27 +295,16 @@ export const DayView = () => {
         .diff(dayjs.utc(post.publishDate).startOf('day'), 'minute'),
     }));
     return sortBy(
-      Object.values(
-        groupBy(
-          [
-            ...createdPosts,
-            ...integrations.flatMap((p) =>
-              p.time.flatMap((t) => ({
-                integration: p,
-                identifier: p?.identifier,
-                name: p?.name,
-                id: p?.id,
-                image: p?.picture,
-                time: t?.time,
-              }))
-            ),
-          ],
-          (p: any) => p.time
-        )
-      ),
+      Object.values(groupBy(createdPosts, (p) => p.time)),
       (p) => p[0].time
     );
   }, [integrations, posts]);
+
+  // Default time used by the "create post" bar in the side column.
+  const createBarDate = useMemo(
+    () => newDayjs().add(1, 'hour').startOf('hour'),
+    []
+  );
 
   return (
     <div className="flex flex-1 min-h-0 text-textColor">
@@ -356,9 +349,15 @@ export const DayView = () => {
         </div>
       </div>
 
-      {/* Month picker beside the grid (desktop only) */}
-      <aside className="hidden lg:block w-[320px] flex-none border-s border-newTextColor/10 ps-[24px] pe-[8px] py-[16px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+      {/* Month picker + create-post bar beside the grid (desktop only) */}
+      <aside className="hidden lg:flex flex-col gap-[20px] w-[320px] flex-none border-s border-newTextColor/10 ps-[24px] pe-[8px] py-[16px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
         <MiniMonth />
+        <div className="flex flex-col gap-[8px]">
+          <div className="text-[13px] font-[600] text-textColor/70">
+            {t('create_post', 'Create post')}
+          </div>
+          <CalendarColumn getDate={createBarDate} />
+        </div>
       </aside>
     </div>
   );
