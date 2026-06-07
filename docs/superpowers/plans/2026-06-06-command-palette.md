@@ -34,7 +34,7 @@
 **Files:**
 - Modify: `postiz-frontend/apps/frontend/package.json`
 
-- [ ] **Step 1: Instalar cmdk en el workspace del frontend**
+- [x] **Step 1: Instalar cmdk en el workspace del frontend**
 
 Run:
 ```bash
@@ -42,7 +42,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && pnpm --filter ./a
 ```
 Expected: `package.json` de `apps/frontend` queda con `"cmdk": "1.1.1"` y `pnpm-lock.yaml` actualizado.
 
-- [ ] **Step 2: Verificar instalación**
+- [x] **Step 2: Verificar instalación**
 
 Run:
 ```bash
@@ -66,7 +66,7 @@ Lógica pura sin imports `@gitroom/*` para que sea testeable bajo el jest existe
 - Create: `postiz-frontend/apps/frontend/src/components/command-palette/commands.ts`
 - Test: `postiz-frontend/apps/frontend/src/components/command-palette/commands.spec.ts`
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```ts
 // commands.spec.ts
@@ -142,7 +142,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && npx jest apps/fro
 ```
 Expected: FAIL — `Cannot find module './commands'`.
 
-- [ ] **Step 3: Implementar `commands.ts`**
+- [x] **Step 3: Implementar `commands.ts`**
 
 ```ts
 // commands.ts
@@ -236,7 +236,7 @@ export function buildStaticCommands(ctx: CommandContext): Command[] {
 }
 ```
 
-- [ ] **Step 4: Correr el test para verificar que pasa**
+- [x] **Step 4: Correr el test para verificar que pasa**
 
 Run:
 ```bash
@@ -257,7 +257,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && git add apps/fron
 **Files:**
 - Create: `postiz-frontend/apps/frontend/src/components/command-palette/command-palette.store.ts`
 
-- [ ] **Step 1: Implementar el store**
+- [x] **Step 1: Implementar el store**
 
 Sigue el patrón de `new-modal.tsx` (`create` de zustand). Mantiene apertura y un registro de comandos contextuales por clave (para que el calendario registre/desregistre sus comandos).
 
@@ -293,7 +293,7 @@ export const useCommandPaletteStore = create<CommandPaletteState>((set) => ({
 }));
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run:
 ```bash
@@ -321,7 +321,7 @@ Notas de APIs ya verificadas:
 - Router: `useRouter`, `usePathname` de `next/navigation`.
 - Hotkey: `useHotkeys` de `react-hotkeys-hook`.
 
-- [ ] **Step 1: Implementar el componente**
+- [x] **Step 1: Implementar el componente**
 
 ```tsx
 // command-palette.tsx
@@ -516,7 +516,7 @@ export const CommandPalette = () => {
 };
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run:
 ```bash
@@ -537,7 +537,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && git add apps/fron
 **Files:**
 - Create: `postiz-frontend/apps/frontend/src/components/command-palette/command-palette.button.tsx`
 
-- [ ] **Step 1: Implementar el botón**
+- [x] **Step 1: Implementar el botón**
 
 ```tsx
 // command-palette.button.tsx
@@ -577,7 +577,7 @@ export const CommandPaletteButton = () => {
 };
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run:
 ```bash
@@ -598,7 +598,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && git add apps/fron
 **Files:**
 - Modify: `postiz-frontend/apps/frontend/src/components/new-layout/layout.component.tsx`
 
-- [ ] **Step 1: Agregar imports**
+- [x] **Step 1: Agregar imports**
 
 Cerca del resto de imports (después de la línea `import { useIsMobile } ...`):
 ```tsx
@@ -606,7 +606,7 @@ import { CommandPalette } from '@gitroom/frontend/components/command-palette/com
 import { CommandPaletteButton } from '@gitroom/frontend/components/command-palette/command-palette.button';
 ```
 
-- [ ] **Step 2: Montar `<CommandPalette/>` junto a los otros componentes globales**
+- [x] **Step 2: Montar `<CommandPalette/>` junto a los otros componentes globales**
 
 En el bloque que ya monta `<ShowMediaBoxModal />`, `<ShowLinkedinCompany />`, etc. (dentro de `<CheckPayment ...>`), agregar:
 ```tsx
@@ -620,7 +620,7 @@ En el bloque que ya monta `<ShowMediaBoxModal />`, `<ShowLinkedinCompany />`, et
             <CommandPalette />
 ```
 
-- [ ] **Step 3: Agregar el botón en la barra superior**
+- [x] **Step 3: Agregar el botón en la barra superior**
 
 En la barra sticky (`<div className="sticky top-0 z-40 flex bg-newBgColorInner h-[56px] lg:h-[80px] ...">`, alrededor de la línea 198), insertar `<CommandPaletteButton />` antes de `<StreakComponent />`:
 ```tsx
@@ -629,7 +629,7 @@ En la barra sticky (`<div className="sticky top-0 z-40 flex bg-newBgColorInner h
 ```
 (Mantener el resto igual. El botón ya trae `hidden lg:flex`, así que no aparece en mobile; el atajo ⌘K sí funciona en cualquier viewport.)
 
-- [ ] **Step 4: Verificar typecheck**
+- [x] **Step 4: Verificar typecheck**
 
 Run:
 ```bash
@@ -659,7 +659,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && git add apps/fron
 - Modify: `postiz-backend/libraries/nestjs-libraries/src/dtos/posts/get.posts.list.dto.ts`
 - Modify: `postiz-backend/libraries/nestjs-libraries/src/database/prisma/posts/posts.repository.ts:223-276`
 
-- [ ] **Step 1: Agregar `search` al DTO**
+- [x] **Step 1: Agregar `search` al DTO**
 
 En `get.posts.list.dto.ts`, dentro de `class GetPostsListDto`, agregar tras el campo `state`:
 ```ts
@@ -669,7 +669,7 @@ En `get.posts.list.dto.ts`, dentro de `class GetPostsListDto`, agregar tras el c
 ```
 (Verificar que `IsOptional` e `IsString` ya estén importados de `class-validator`; en el archivo ya se usan para `customer`.)
 
-- [ ] **Step 2: Aplicar el filtro en el repositorio**
+- [x] **Step 2: Aplicar el filtro en el repositorio**
 
 En `posts.repository.ts`, dentro de `getPostsList`, modificar la construcción de `where` para (a) buscar por contenido y (b) no limitar a fechas futuras cuando hay búsqueda.
 
@@ -695,7 +695,7 @@ por:
         : {}),
 ```
 
-- [ ] **Step 3: Verificar typecheck del backend**
+- [x] **Step 3: Verificar typecheck del backend**
 
 Run:
 ```bash
@@ -734,7 +734,7 @@ Notas verificadas:
 - Abrir grupo: endpoint `GET /posts/group/:group` (existe). El editor se abre con `AddEditModal`.
 - `getDateRange(display, referenceDate)` se exporta desde `calendar.context`? Verificar; si no se exporta, replicar el cálculo con `newDayjs()` como en `MonthView`.
 
-- [ ] **Step 1: Implementar `calendar-palette-commands.tsx`**
+- [x] **Step 1: Implementar `calendar-palette-commands.tsx`**
 
 ```tsx
 // calendar-palette-commands.tsx
@@ -897,7 +897,7 @@ export const CalendarPaletteCommands = () => {
 };
 ```
 
-- [ ] **Step 2: Montar el componente dentro del provider del calendario**
+- [x] **Step 2: Montar el componente dentro del provider del calendario**
 
 En `launches.component.tsx`, dentro del JSX que está envuelto por `CalendarWeekProvider` (donde vive `<NewPost />` y el calendario), agregar `<CalendarPaletteCommands />`. Import al inicio:
 ```tsx
@@ -909,7 +909,7 @@ Y en el render, justo dentro del árbol del provider (por ejemplo junto al bloqu
 ```
 (Debe quedar como descendiente de `CalendarWeekProvider` para que `useCalendar()` funcione. Si el provider está en otro componente padre, montarlo ahí.)
 
-- [ ] **Step 3: Verificar typecheck**
+- [x] **Step 3: Verificar typecheck**
 
 Run:
 ```bash
@@ -934,7 +934,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend" && git add apps/fron
 
 ## Task 9: Verificación final e integración
 
-- [ ] **Step 1: Typecheck completo del frontend**
+- [x] **Step 1: Typecheck completo del frontend**
 
 Run:
 ```bash
@@ -942,7 +942,7 @@ cd "/Users/yairchan/Proyectos/Social Media/postiz-frontend/apps/frontend" && npx
 ```
 Expected: `0`.
 
-- [ ] **Step 2: Tests unitarios**
+- [x] **Step 2: Tests unitarios**
 
 Run:
 ```bash

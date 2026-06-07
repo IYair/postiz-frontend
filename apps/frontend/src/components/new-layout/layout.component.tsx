@@ -42,6 +42,8 @@ import { PreConditionComponent } from '@gitroom/frontend/components/layout/pre-c
 import { AttachToFeedbackIcon } from '@gitroom/frontend/components/new-layout/sentry.feedback.component';
 import { FirstBillingComponent } from '@gitroom/frontend/components/billing/first.billing.component';
 import { useIsMobile } from '@gitroom/frontend/components/launches/helpers/use.is.mobile';
+import { CommandPalette } from '@gitroom/frontend/components/command-palette/command-palette';
+import { CommandPaletteButton } from '@gitroom/frontend/components/command-palette/command-palette.button';
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ['600', '500', '700'],
@@ -99,6 +101,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
             <PreConditionComponent />
             <NewSubscription />
             <ContinueProvider />
+            <CommandPalette />
             <div
               className={clsx(
                 'flex flex-col min-h-screen min-w-screen text-newTextColor p-[12px]',
@@ -215,6 +218,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         {/* Top bar icons */}
                         <div className="flex gap-[8px] lg:gap-[20px] text-textItemBlur items-center">
                           <div className="hidden lg:flex items-center gap-[20px]">
+                            <CommandPaletteButton />
                             <StreakComponent />
                             <div className="w-[1px] h-[20px] bg-blockSeparator" />
                             <OrganizationSelector />

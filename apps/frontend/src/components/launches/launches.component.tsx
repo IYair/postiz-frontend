@@ -27,6 +27,7 @@ import { useIntegrationList } from '@gitroom/frontend/components/launches/helper
 import useCookie from 'react-use-cookie';
 import { Onboarding } from '@gitroom/frontend/components/onboarding/onboarding';
 import { useIsMobile } from '@gitroom/frontend/components/launches/helpers/use.is.mobile';
+import { CalendarPaletteCommands } from '@gitroom/frontend/components/launches/calendar-palette-commands';
 
 export const SVGLine = () => {
   return (
@@ -611,6 +612,7 @@ export const LaunchesComponent = () => {
     <DNDProvider>
       <Onboarding />
       <CalendarWeekProvider integrations={sortedIntegrations}>
+        <CalendarPaletteCommands />
         {/* Mobile/tablet: right-side off-canvas drawer */}
         <div
           className={clsx(
