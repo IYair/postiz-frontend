@@ -13,6 +13,8 @@ interface AiConfigResponse {
   imageProvider?: string | null;
   textModel?: string | null;
   imageModel?: string | null;
+  videoProvider?: string | null;
+  videoModel?: string | null;
   keyHints: { anthropic?: string; openai?: string; gemini?: string };
 }
 
@@ -21,6 +23,8 @@ interface AiConfigFormState {
   imageProvider: string;
   textModel: string;
   imageModel: string;
+  videoProvider: string;
+  videoModel: string;
   keys: { anthropic: string; openai: string; gemini: string };
 }
 
@@ -68,11 +72,26 @@ const IMAGE_PROVIDERS = [
   { value: 'gemini', label: 'Google Gemini' },
 ];
 
+const VIDEO_PROVIDERS = [
+  { value: '', label: 'None' },
+  { value: 'google', label: 'Google Veo' },
+];
+
+const VIDEO_MODEL_OPTIONS: Record<string, { value: string; label: string }[]> =
+  {
+    google: [
+      { value: 'veo-3.0-fast-generate-001', label: 'Veo 3 Fast' },
+      { value: 'veo-3.0-generate-001', label: 'Veo 3' },
+    ],
+  };
+
 const INITIAL_STATE: AiConfigFormState = {
   textProvider: 'openai',
   imageProvider: '',
   textModel: '',
   imageModel: '',
+  videoProvider: '',
+  videoModel: '',
   keys: { anthropic: '', openai: '', gemini: '' },
 };
 
@@ -113,6 +132,8 @@ const AiProviderComponent = () => {
         imageProvider: data.imageProvider || '',
         textModel: data.textModel || '',
         imageModel: data.imageModel || '',
+        videoProvider: data.videoProvider || '',
+        videoModel: data.videoModel || '',
         keys: { anthropic: '', openai: '', gemini: '' },
       });
       setKeyHints(data.keyHints || {});
@@ -138,6 +159,11 @@ const AiProviderComponent = () => {
           next.imageModel = models?.[0]?.value || '';
         }
 
+        if (field === 'videoProvider') {
+          const models = VIDEO_MODEL_OPTIONS[value];
+          next.videoModel = models?.[0]?.value || '';
+        }
+
         return next;
       });
     },
@@ -156,8 +182,10 @@ const AiProviderComponent = () => {
     const providers = new Set<string>();
     if (form.textProvider) providers.add(form.textProvider);
     if (form.imageProvider) providers.add(form.imageProvider);
+    // Video (Google Veo) reusa la key de Gemini/Google.
+    if (form.videoProvider === 'google') providers.add('gemini');
     return Array.from(providers);
-  }, [form.textProvider, form.imageProvider]);
+  }, [form.textProvider, form.imageProvider, form.videoProvider]);
 
   const handleTest = useCallback(
     async (provider: string) => {
@@ -246,6 +274,8 @@ const AiProviderComponent = () => {
           imageProvider: form.imageProvider || null,
           textModel: form.textModel || null,
           imageModel: form.imageModel || null,
+          videoProvider: form.videoProvider || null,
+          videoModel: form.videoModel || null,
           keys: keysToSend,
         }),
       });
@@ -410,6 +440,53 @@ const AiProviderComponent = () => {
               ))}
             </select>
           </div>
+        )}
+      </div>
+
+      {/* Video Generation Card */}
+      <div className="bg-sixth border-fifth border rounded-[4px] p-[24px] flex flex-col gap-[16px]">
+        <div className="text-[16px] font-medium">
+          {t('ai_video_generation', 'Video Generation')}
+        </div>
+
+        <div className="flex flex-col gap-[6px]">
+          <div className="text-[14px]">{t('ai_video_provider', 'Provider')}</div>
+          <select
+            value={form.videoProvider}
+            onChange={(e) => updateForm('videoProvider', e.target.value)}
+            className="h-[42px] bg-newBgColorInner px-[16px] outline-none border-newTableBorder border rounded-[8px] text-[14px]"
+          >
+            {VIDEO_PROVIDERS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {form.videoProvider && (
+          <>
+            <div className="flex flex-col gap-[6px]">
+              <div className="text-[14px]">{t('ai_video_model', 'Model')}</div>
+              <select
+                value={form.videoModel}
+                onChange={(e) => updateForm('videoModel', e.target.value)}
+                className="h-[42px] bg-newBgColorInner px-[16px] outline-none border-newTableBorder border rounded-[8px] text-[14px]"
+              >
+                {(VIDEO_MODEL_OPTIONS[form.videoProvider] || []).map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="text-[12px] text-customColor18 bg-newBgColorInner border-newTableBorder border rounded-[8px] p-[12px]">
+              {t(
+                'ai_video_uses_google_key',
+                'Video generation uses your Google Gemini API key configured below.'
+              )}
+            </div>
+          </>
         )}
       </div>
 
