@@ -20,7 +20,7 @@ import { useWaitForClass } from '@gitroom/helpers/utils/use.wait.for.class';
 import { MultiMediaComponent } from '@gitroom/frontend/components/media/media.component';
 import { Integration } from '@prisma/client';
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 
 export const MediaPortal: FC<{
@@ -43,7 +43,7 @@ export const MediaPortal: FC<{
   const t = useT();
   if (!waitForClass) return null;
   return (
-    <div className="pl-[14px] pr-[24px] whitespace-nowrap editor rm-bg">
+    <div className="agent-media-portal whitespace-nowrap editor rm-bg">
       <MultiMediaComponent
         allData={[{ content: value }]}
         text={value}
@@ -65,7 +65,7 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
 }) => {
   const fetch = useFetch();
   const t = useT();
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState<Integration[]>([]);
 
   const load = useCallback(async () => {
     return (await (await fetch('/integrations/list')).json()).integrations;
@@ -105,20 +105,36 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
   }, [data]);
 
   return (
-    <div
+    <aside
       className={clsx(
-        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative',
-        collapseMenu === '1' ? 'group sidebar w-[100px]' : 'w-[260px]'
+        'agent-panel agent-channels trz hidden lg:flex flex-col transition-all relative',
+        collapseMenu === '1' ? 'group sidebar w-[88px]' : 'w-[280px]'
       )}
     >
-      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
-        <div className="flex items-center">
-          <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[500] mb-[15px]">
-            {t('select_channels', 'Select Channels')}
-          </h2>
+      <div className="absolute top-0 start-0 w-full h-full p-[14px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+        <div className="agent-panel-tabs group-[.sidebar]:justify-center">
+          <div className="agent-panel-tab agent-panel-tab-active group-[.sidebar]:w-[42px] group-[.sidebar]:px-0 group-[.sidebar]:justify-center">
+            <span className="agent-panel-tab-dot" />
+            <span className="group-[.sidebar]:hidden">Chat</span>
+          </div>
+          <div className="agent-panel-tab group-[.sidebar]:hidden">
+            {t('channels', 'Channels')}
+          </div>
+        </div>
+        <div className="flex items-center mt-[20px] mb-[14px]">
+          <div className="group-[.sidebar]:hidden flex-1">
+            <h2 className="text-[13px] uppercase tracking-[0.18em] text-textItemBlur font-[600]">
+              {t('select_channels', 'Select Channels')}
+            </h2>
+            <div className="text-[12px] text-textItemBlur/80 mt-[4px]">
+              {selected.length
+                ? `${selected.length} ${t('selected', 'selected')}`
+                : t('choose_context_for_agent', 'Choose agent context')}
+            </div>
+          </div>
           <div
             onClick={() => setCollapseMenu(collapseMenu === '1' ? '0' : '1')}
-            className="-mt-3 group-[.sidebar]:rotate-[180deg] group-[.sidebar]:mx-auto text-btnText bg-btnSimple rounded-[6px] w-[24px] h-[24px] flex items-center justify-center cursor-pointer select-none"
+            className="agent-collapse-button group-[.sidebar]:rotate-[180deg] group-[.sidebar]:mx-auto"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -137,14 +153,17 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
             </svg>
           </div>
         </div>
-        <div className={clsx('flex flex-col gap-[15px]')}>
-          {sortedIntegrations.map((integration, index) => (
+        <div className={clsx('flex flex-col gap-[6px]')}>
+          {sortedIntegrations.map((integration) => (
             <div
               onClick={setIntegration(integration)}
               key={integration.id}
               className={clsx(
-                'flex gap-[12px] items-center group/profile justify-center hover:bg-boxHover rounded-e-[8px] hover:opacity-100 cursor-pointer',
-                !selected.some((p) => p.id === integration.id) && 'opacity-20'
+                'agent-channel-row flex gap-[12px] items-center group/profile justify-center cursor-pointer',
+                selected.some((p) => p.id === integration.id) &&
+                  'agent-channel-row-active',
+                !selected.some((p) => p.id === integration.id) &&
+                  'agent-channel-row-muted'
               )}
             >
               <div
@@ -161,20 +180,20 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
                     <div className="bg-primary/60 w-[39px] h-[46px] start-0 top-0 absolute rounded-full z-[199]" />
                   </div>
                 )}
-                <div className="h-full w-[4px] -ms-[12px] rounded-s-[3px] opacity-0 group-hover/profile:opacity-100 transition-opacity">
+                <div className="agent-channel-line h-full w-[4px] -ms-[12px] rounded-s-[3px] opacity-0 group-hover/profile:opacity-100 transition-opacity">
                   <SVGLine />
                 </div>
                 <ImageWithFallback
                   fallbackSrc={`/icons/platforms/${integration.identifier}.png`}
                   src={integration.picture}
-                  className="rounded-[8px]"
+                  className="rounded-[10px]"
                   alt={integration.identifier}
                   width={36}
                   height={36}
                 />
                 <SafeImage
                   src={`/icons/platforms/${integration.identifier}.png`}
-                  className="rounded-[8px] absolute z-10 bottom-[5px] -end-[5px] border border-fifth"
+                  className="rounded-[7px] absolute z-10 bottom-[3px] -end-[5px] border border-fifth"
                   alt={integration.identifier}
                   width={18.41}
                   height={18.41}
@@ -182,7 +201,7 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
               </div>
               <div
                 className={clsx(
-                  'flex-1 whitespace-nowrap text-ellipsis overflow-hidden group-[.sidebar]:hidden',
+                  'flex-1 whitespace-nowrap text-ellipsis overflow-hidden group-[.sidebar]:hidden text-[14px]',
                   integration.disabled && 'opacity-50'
                 )}
               >
@@ -192,27 +211,29 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
           ))}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
-export const PropertiesContext = createContext({ properties: [] });
+export const PropertiesContext = createContext<{ properties: any[] }>({
+  properties: [],
+});
 export const Agent: FC<{ children: ReactNode }> = ({ children }) => {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<any[]>([]);
 
   return (
     <PropertiesContext.Provider value={{ properties }}>
-      <AgentList onChange={setProperties} />
-      <div className="bg-newBgColorInner flex flex-1">{children}</div>
-      <Threads />
+      <div className="agent-shell flex flex-1 min-w-0 w-full">
+        <AgentList onChange={setProperties} />
+        <div className="agent-stage flex flex-1 min-w-0">{children}</div>
+        <Threads />
+      </div>
     </PropertiesContext.Provider>
   );
 };
 
 const Threads: FC = () => {
   const fetch = useFetch();
-  const router = useRouter();
-  const pathname = usePathname();
   const t = useT();
   const threads = useCallback(async () => {
     return (await fetch('/copilot/list')).json();
@@ -222,17 +243,15 @@ const Threads: FC = () => {
   const { data } = useSWR('threads', threads);
 
   return (
-    <div
-      className={clsx(
-        'trz bg-newBgColorInner flex flex-col gap-[15px] transition-all relative',
-        'w-[260px]'
-      )}
-    >
-      <div className="absolute top-0 start-0 w-full h-full p-[20px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
-        <div className="mb-[15px] justify-center flex group-[.sidebar]:pb-[15px]">
+    <aside className="agent-panel agent-threads trz hidden xl:flex flex-col gap-[15px] transition-all relative w-[280px]">
+      <div className="absolute top-0 start-0 w-full h-full p-[14px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+        <div className="agent-recents-header">
+          <span>{t('recents', 'Recents')}</span>
+        </div>
+        <div className="mb-[16px] justify-center flex group-[.sidebar]:pb-[15px]">
           <Link
             href={`/agents`}
-            className="text-white whitespace-nowrap flex-1 pt-[12px] pb-[14px] ps-[16px] pe-[20px] group-[.sidebar]:p-0 min-h-[44px] max-h-[44px] rounded-md bg-btnPrimary flex justify-center items-center gap-[5px] outline-none"
+            className="agent-new-chat text-white whitespace-nowrap flex-1 group-[.sidebar]:p-0 min-h-[44px] max-h-[44px] flex justify-center items-center gap-[8px] outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -250,17 +269,17 @@ const Threads: FC = () => {
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="flex-1 text-start text-[16px] group-[.sidebar]:hidden">
+            <div className="flex-1 text-start text-[14px] group-[.sidebar]:hidden">
               {t('start_a_new_chat', 'Start a new chat')}
             </div>
           </Link>
         </div>
-        <div className="flex flex-col gap-[1px]">
+        <div className="flex flex-col gap-[2px]">
           {data?.threads?.map((p: any) => (
             <Link
               className={clsx(
-                'overflow-ellipsis overflow-hidden whitespace-nowrap hover:bg-newBgColor px-[10px] py-[6px] rounded-[10px] cursor-pointer',
-                p.id === id && 'bg-newBgColor'
+                'agent-thread-link overflow-ellipsis overflow-hidden whitespace-nowrap cursor-pointer',
+                p.id === id && 'agent-thread-link-active'
               )}
               href={`/agents/${p.id}`}
               key={p.id}
@@ -270,6 +289,6 @@ const Threads: FC = () => {
           ))}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };

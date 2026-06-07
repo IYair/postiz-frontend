@@ -53,20 +53,37 @@ export const AgentChat: FC = () => {
     >
       <Hooks />
       <LoadMessages id={params.id} />
-      <div
+      <section
         style={
           {
-            '--copilot-kit-primary-color': 'var(--new-btn-text)',
-            '--copilot-kit-background-color': 'var(--new-bg-color)',
+            '--copilot-kit-primary-color': '#f3f0e8',
+            '--copilot-kit-background-color': '#1b1b19',
+            '--copilot-kit-input-background-color': '#282725',
+            '--copilot-kit-separator-color': 'rgba(255, 255, 255, 0.12)',
+            '--copilot-kit-contrast-color': '#10100f',
+            '--copilot-kit-secondary-contrast-color': '#f2eee4',
+            '--copilot-kit-muted-color': 'rgba(243, 240, 232, 0.38)',
           } as CopilotKitCSSProperties
         }
-        className="trz agent bg-newBgColorInner flex flex-col gap-[15px] transition-all flex-1 items-center relative"
+        className="trz agent agent-chat-surface flex flex-col transition-all flex-1 min-w-0"
       >
-        <div className="absolute left-0 w-full h-full pb-[20px]">
+        <div className="agent-chat-topbar">
+          <div>
+            <div className="agent-eyebrow">Postiz Agent</div>
+            <h1>{t('your_assistant', 'Your Assistant')}</h1>
+          </div>
+          <div className="agent-topbar-meta">
+            {properties.length
+              ? `${properties.length} ${t('channels', 'channels')}`
+              : t('no_channels_selected', 'No channels selected')}
+          </div>
+        </div>
+        <div className="agent-chat-frame">
           <CopilotChat
-            className="w-full h-full"
+            className="agent-copilot-chat w-full h-full"
             labels={{
               title: t('your_assistant', 'Your Assistant'),
+              placeholder: t('write_a_message', 'Write a message...'),
               initial: t('agent_welcome_message', `Hello, I am your Postiz agent 🙌🏻.
               
 I can schedule a post or multiple posts to multiple channels and generate pictures and videos.
@@ -82,7 +99,7 @@ You can also use me as an MCP Server, check Settings >> Public API
             Input={NewInput}
           />
         </div>
-      </div>
+      </section>
     </CopilotKit>
   );
 };

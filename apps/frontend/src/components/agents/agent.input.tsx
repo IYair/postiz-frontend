@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { useCopilotContext, useCopilotReadable } from '@copilotkit/react-core';
+import { useCopilotContext } from '@copilotkit/react-core';
 import AutoResizingTextarea from '@gitroom/frontend/components/agents/agent.textarea';
 import { useChatContext } from '@copilotkit/react-ui';
 import { InputProps } from '@copilotkit/react-ui/dist/components/chat/props';
@@ -70,7 +70,7 @@ export const Input = ({
         showPoweredBy ? 'poweredByContainer' : ''
       }`}
     >
-      <div className="copilotKitInput" onClick={handleDivClick}>
+      <div className="copilotKitInput agent-composer" onClick={handleDivClick}>
         <AutoResizingTextarea
           ref={textareaRef}
           placeholder={context.labels.placeholder}
@@ -92,14 +92,21 @@ export const Input = ({
             }
           }}
         />
-        <div className="copilotKitInputControls">
+        <div className="copilotKitInputControls agent-composer-controls">
           {onUpload && (
-            <button onClick={onUpload} className="copilotKitInputControlButton">
+            <button
+              onClick={onUpload}
+              className="copilotKitInputControlButton agent-composer-action"
+              aria-label="Add attachment"
+            >
               {context.icons.uploadIcon}
             </button>
           )}
 
-          <div style={{ flexGrow: 1 }} />
+          <div className="agent-composer-meta">
+            <span>Postiz Agent</span>
+            <span>Enter to send</span>
+          </div>
           <button
             disabled={sendDisabled}
             onClick={isInProgress && !hideStopButton ? onStop : send}
@@ -109,7 +116,7 @@ export const Input = ({
                 ? 'copilot-chat-request-in-progress'
                 : 'copilot-chat-ready'
             }
-            className="copilotKitInputControlButton"
+            className="copilotKitInputControlButton agent-composer-send"
           >
             {buttonIcon}
           </button>
