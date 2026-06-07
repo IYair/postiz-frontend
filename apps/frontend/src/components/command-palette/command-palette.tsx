@@ -3,6 +3,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Command as Cmdk } from 'cmdk';
 import { useHotkeys } from 'react-hotkeys-hook';
+import {
+  BarChart3,
+  Bot,
+  CalendarDays,
+  CalendarRange,
+  CreditCard,
+  FileText,
+  Image,
+  Link,
+  MessageCircle,
+  Plug,
+  Plus,
+  Search,
+  Settings,
+  Sparkles,
+} from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAddProvider } from '@gitroom/frontend/components/launches/add.provider.component';
 import { useCommandPaletteStore } from '@gitroom/frontend/components/command-palette/command-palette.store';
@@ -11,6 +27,7 @@ import {
   type Command,
 } from '@gitroom/frontend/components/command-palette/commands';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
+import { expandPostsList } from '@gitroom/helpers/utils/posts.list.minify';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 
 interface PostResult {
@@ -22,6 +39,26 @@ interface PostResult {
 }
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, '');
+
+const commandIcons = {
+  'nav-calendar': CalendarDays,
+  'nav-analytics': BarChart3,
+  'nav-media': Image,
+  'nav-agents': Bot,
+  'nav-plugs': Plug,
+  'nav-integrations': Link,
+  'nav-billing': CreditCard,
+  'nav-settings': Settings,
+  'nav-ai-provider': Sparkles,
+  'action-create-post': Plus,
+  'action-connect-social': Link,
+  'action-agent-chat': MessageCircle,
+  'view-day': CalendarRange,
+  'view-week': CalendarRange,
+  'view-month': CalendarRange,
+  'view-list': FileText,
+  'view-today': CalendarDays,
+} as const;
 
 export const CommandPalette = () => {
   const open = useCommandPaletteStore((s) => s.open);
@@ -98,7 +135,8 @@ export const CommandPalette = () => {
           `/posts/list?search=${encodeURIComponent(term)}&limit=8`
         );
         const data = await res.json();
-        setPostResults(Array.isArray(data?.posts) ? data.posts : []);
+        const expanded = expandPostsList(data);
+        setPostResults(Array.isArray(expanded?.posts) ? expanded.posts : []);
       } catch {
         setPostResults([]);
       }
@@ -177,16 +215,7 @@ export const CommandPalette = () => {
               className="px-[8px] py-[6px] text-[11px] uppercase tracking-wide text-textColor/40 [&_[cmdk-group-items]]:mt-[4px]"
             >
               {cmds.map((cmd) => (
-                <Cmdk.Item
-                  key={cmd.id}
-                  value={`${cmd.label} ${(cmd.keywords || []).join(' ')}`}
-                  onSelect={() => {
-                    void cmd.perform();
-                  }}
-                  className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-[12px] py-[10px] text-[14px] normal-case text-textColor data-[selected=true]:bg-forth data-[selected=true]:text-white"
-                >
-                  {cmd.label}
-                </Cmdk.Item>
+                <CommandItem key={cmd.id} command={cmd} />
               ))}
             </Cmdk.Group>
           ))}
@@ -205,9 +234,12 @@ export const CommandPalette = () => {
                   onSelect={() => openPost(post.group)}
                   className="flex cursor-pointer flex-col gap-[2px] rounded-[8px] px-[12px] py-[10px] text-[14px] normal-case text-textColor data-[selected=true]:bg-forth data-[selected=true]:text-white"
                 >
-                  <span className="line-clamp-1">
-                    {getPostLabel(post) || t('untitled_post', 'Untitled post')}
-                  </span>
+                  <div className="flex w-full items-center gap-[10px]">
+                    <FileText className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="line-clamp-1">
+                      {getPostLabel(post) || t('untitled_post', 'Untitled post')}
+                    </span>
+                  </div>
                 </Cmdk.Item>
               ))}
             </Cmdk.Group>
@@ -215,5 +247,22 @@ export const CommandPalette = () => {
         </Cmdk.List>
       </Cmdk>
     </div>
+  );
+};
+
+const CommandItem = ({ command }: { command: Command }) => {
+  const Icon = commandIcons[command.id as keyof typeof commandIcons] || Search;
+
+  return (
+    <Cmdk.Item
+      value={`${command.label} ${(command.keywords || []).join(' ')}`}
+      onSelect={() => {
+        void command.perform();
+      }}
+      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-[12px] py-[10px] text-[14px] normal-case text-textColor data-[selected=true]:bg-forth data-[selected=true]:text-white"
+    >
+      <Icon className="size-4 shrink-0" aria-hidden="true" />
+      <span>{command.label}</span>
+    </Cmdk.Item>
   );
 };
