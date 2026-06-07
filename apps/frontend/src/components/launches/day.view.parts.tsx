@@ -66,8 +66,8 @@ export const NowIndicator: FC<{ day: dayjs.Dayjs }> = ({ day }) => {
       className="pointer-events-none absolute start-0 end-0 z-[6]"
       style={{ top: minuteToTop(minute) }}
     >
-      <div className="absolute -start-[4px] -top-[4px] size-[8px] rounded-full bg-primary" />
-      <div className="border-t border-primary" />
+      <div className="absolute -start-[4px] -top-[4px] size-[8px] rounded-full bg-forth" />
+      <div className="border-t border-forth" />
     </div>
   );
 };
@@ -168,9 +168,9 @@ export const MiniMonth: FC = () => {
                 className={clsx(
                   'mx-auto flex size-7 items-center justify-center rounded-full transition-colors',
                   isSelected
-                    ? 'bg-primary font-[600] text-white'
+                    ? 'bg-forth font-[600] text-white'
                     : isToday
-                    ? 'bg-primary/25 font-[600] text-primary'
+                    ? 'font-[600] text-forth ring-1 ring-inset ring-forth'
                     : ''
                 )}
               >
