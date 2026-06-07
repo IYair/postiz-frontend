@@ -45,6 +45,13 @@ import { groupBy, random, sortBy } from 'lodash';
 import SafeImage from '@gitroom/react/helpers/safe.image';
 import { extend } from 'dayjs';
 import { isUSCitizen } from './helpers/isuscitizen.utils';
+import {
+  DayTimeGrid,
+  NowIndicator,
+  MiniMonth,
+  DAY_GRID_HEIGHT,
+  minuteToTop,
+} from './day.view.parts';
 import { useInterval } from '@mantine/hooks';
 import { StatisticsModal } from '@gitroom/frontend/components/launches/statistics';
 import { MissingReleaseModal } from '@gitroom/frontend/components/launches/missing-release.modal';
@@ -307,39 +314,52 @@ export const DayView = () => {
   }, [integrations, posts]);
 
   return (
-    <div className="flex flex-col gap-[10px] flex-1 relative">
-      <div className="absolute start-0 top-0 w-full h-full flex flex-col overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
-        {options.map((option) => (
-          <Fragment key={option[0].time}>
-            <div className="text-center text-[14px] min-h-[21px]">
-              {newDayjs()
-                .utc()
-                .startOf('day')
-                .add(option[0].time, 'minute')
-                .local()
-                .format(isUSCitizen() ? 'hh:mm A' : 'LT')}
+    <div className="flex flex-1 min-h-0 text-textColor">
+      {/* Hour grid (12AM..11PM) with day events anchored to their local time */}
+      <div className="flex-1 relative min-w-0">
+        <div className="absolute inset-0 overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+          <div className="flex ps-[56px] pe-[10px] pt-[10px]">
+            <div className="relative flex-1" style={{ height: DAY_GRID_HEIGHT }}>
+              <DayTimeGrid />
+              <NowIndicator day={currentDay} />
+              {options.map((option) => {
+                const slotLocal = newDayjs()
+                  .utc()
+                  .startOf('day')
+                  .add(option[0].time, 'minute')
+                  .local();
+                const localMinute = slotLocal.hour() * 60 + slotLocal.minute();
+                return (
+                  <div
+                    key={option[0].time}
+                    className="absolute start-0 end-0 z-[7] px-[4px]"
+                    style={{ top: minuteToTop(localMinute) }}
+                  >
+                    <CalendarContext.Provider
+                      value={{
+                        ...calendar,
+                        integrations: option.flatMap((p) => p.integration),
+                      }}
+                    >
+                      <CalendarColumn
+                        getDate={currentDay
+                          .startOf('day')
+                          .add(option[0].time, 'minute')
+                          .local()}
+                      />
+                    </CalendarContext.Provider>
+                  </div>
+                );
+              })}
             </div>
-            <div
-              key={option[0].time}
-              className="min-h-[60px] rounded-[10px] flex justify-center items-center gap-[10px] mb-[20px]"
-            >
-              <CalendarContext.Provider
-                value={{
-                  ...calendar,
-                  integrations: option.flatMap((p) => p.integration),
-                }}
-              >
-                <CalendarColumn
-                  getDate={currentDay
-                    .startOf('day')
-                    .add(option[0].time, 'minute')
-                    .local()}
-                />
-              </CalendarContext.Provider>
-            </div>
-          </Fragment>
-        ))}
+          </div>
+        </div>
       </div>
+
+      {/* Month picker beside the grid (desktop only) */}
+      <aside className="hidden lg:block w-[320px] flex-none border-s border-newTextColor/10 ps-[24px] pe-[8px] py-[16px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
+        <MiniMonth />
+      </aside>
     </div>
   );
 };
