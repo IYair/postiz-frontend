@@ -112,16 +112,7 @@ export const AgentList: FC<{ onChange: (arr: any[]) => void }> = ({
       )}
     >
       <div className="absolute top-0 start-0 w-full h-full p-[14px] overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor">
-        <div className="agent-panel-tabs group-[.sidebar]:justify-center">
-          <div className="agent-panel-tab agent-panel-tab-active group-[.sidebar]:w-[42px] group-[.sidebar]:px-0 group-[.sidebar]:justify-center">
-            <span className="agent-panel-tab-dot" />
-            <span className="group-[.sidebar]:hidden">Chat</span>
-          </div>
-          <div className="agent-panel-tab group-[.sidebar]:hidden">
-            {t('channels', 'Channels')}
-          </div>
-        </div>
-        <div className="flex items-center mt-[20px] mb-[14px]">
+        <div className="flex items-center mb-[14px]">
           <div className="group-[.sidebar]:hidden flex-1">
             <h2 className="text-[13px] uppercase tracking-[0.18em] text-textItemBlur font-[600]">
               {t('select_channels', 'Select Channels')}

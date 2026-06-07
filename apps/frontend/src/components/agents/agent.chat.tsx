@@ -56,13 +56,14 @@ export const AgentChat: FC = () => {
       <section
         style={
           {
-            '--copilot-kit-primary-color': '#f3f0e8',
-            '--copilot-kit-background-color': '#1b1b19',
-            '--copilot-kit-input-background-color': '#282725',
-            '--copilot-kit-separator-color': 'rgba(255, 255, 255, 0.12)',
-            '--copilot-kit-contrast-color': '#10100f',
-            '--copilot-kit-secondary-contrast-color': '#f2eee4',
-            '--copilot-kit-muted-color': 'rgba(243, 240, 232, 0.38)',
+            '--copilot-kit-primary-color': 'rgb(var(--new-textColor))',
+            '--copilot-kit-background-color': 'var(--new-bgColor)',
+            '--copilot-kit-input-background-color': 'var(--new-bgColorInner)',
+            '--copilot-kit-separator-color': 'var(--new-table-border)',
+            '--copilot-kit-contrast-color': 'var(--new-bgColor)',
+            '--copilot-kit-secondary-contrast-color':
+              'rgb(var(--new-textColor))',
+            '--copilot-kit-muted-color': 'var(--new-textItemBlur)',
           } as CopilotKitCSSProperties
         }
         className="trz agent agent-chat-surface flex flex-col transition-all flex-1 min-w-0"
@@ -186,30 +187,31 @@ const NewInput: FC<InputProps> = (props) => {
   const [value, setValue] = useState('');
   const { properties } = useContext(PropertiesContext);
   return (
-    <>
-      <MediaPortal
-        value={value}
-        media={media}
-        setMedia={(e) => setMedia(e.target.value)}
-      />
-      <Input
-        {...props}
-        onChange={setValue}
-        onSend={(text) => {
-          const send = props.onSend(
-            text +
-              (media.length > 0
-                ? '\n[--Media--]' +
-                  media
-                    .map((m) =>
-                      m.path.indexOf('mp4') > -1
-                        ? `Video: ${m.path}`
-                        : `Image: ${m.path}`
-                    )
-                    .join('\n') +
-                  '\n[--Media--]'
-                : '') +
-              `
+    <Input
+      {...props}
+      onChange={setValue}
+      actions={
+        <MediaPortal
+          value={value}
+          media={media}
+          setMedia={(e) => setMedia(e.target.value)}
+        />
+      }
+      onSend={(text) => {
+        const send = props.onSend(
+          text +
+            (media.length > 0
+              ? '\n[--Media--]' +
+                media
+                  .map((m) =>
+                    m.path.indexOf('mp4') > -1
+                      ? `Video: ${m.path}`
+                      : `Image: ${m.path}`
+                  )
+                  .join('\n') +
+                '\n[--Media--]'
+              : '') +
+            `
 ${
   properties.length
     ? `[--integrations--]
@@ -224,13 +226,12 @@ Use the following social media platforms: ${JSON.stringify(
 [--integrations--]`
     : ``
 }`
-          );
-          setValue('');
-          setMedia([]);
-          return send;
-        }}
-      />
-    </>
+        );
+        setValue('');
+        setMedia([]);
+        return send;
+      }}
+    />
   );
 };
 

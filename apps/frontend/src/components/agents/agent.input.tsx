@@ -13,13 +13,15 @@ export const Input = ({
   onUpload,
   hideStopButton = false,
   onChange,
-}: InputProps & { onChange: (value: string) => void }) => {
+  actions,
+}: InputProps & { onChange: (value: string) => void; actions?: React.ReactNode }) => {
   const context = useChatContext();
   const copilotContext = useCopilotContext();
   const showPoweredBy = !copilotContext.copilotApiConfig?.publicApiKey;
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const handleDivClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
@@ -71,6 +73,9 @@ export const Input = ({
       }`}
     >
       <div className="copilotKitInput agent-composer" onClick={handleDivClick}>
+        {actions && showActions ? (
+          <div className="agent-composer-actions">{actions}</div>
+        ) : null}
         <AutoResizingTextarea
           ref={textareaRef}
           placeholder={context.labels.placeholder}
@@ -93,8 +98,20 @@ export const Input = ({
           }}
         />
         <div className="copilotKitInputControls agent-composer-controls">
+          {actions && (
+            <button
+              type="button"
+              onClick={() => setShowActions((current) => !current)}
+              className="copilotKitInputControlButton agent-composer-plus"
+              aria-label="Open media actions"
+              aria-expanded={showActions}
+            >
+              +
+            </button>
+          )}
           {onUpload && (
             <button
+              type="button"
               onClick={onUpload}
               className="copilotKitInputControlButton agent-composer-action"
               aria-label="Add attachment"
@@ -104,10 +121,14 @@ export const Input = ({
           )}
 
           <div className="agent-composer-meta">
-            <span>Postiz Agent</span>
+            <button type="button" className="agent-model-selector">
+              Modelo auto
+              <span>v</span>
+            </button>
             <span>Enter to send</span>
           </div>
           <button
+            type="button"
             disabled={sendDisabled}
             onClick={isInProgress && !hideStopButton ? onStop : send}
             data-copilotkit-in-progress={inProgress}
