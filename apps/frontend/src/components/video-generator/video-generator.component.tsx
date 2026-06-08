@@ -5,6 +5,7 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { Button } from '@gitroom/react/form/button';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useAiConfig } from '@gitroom/frontend/components/settings/ai-provider.component';
 
 type Mode = 'text' | 'frames' | 'ingredients';
 interface ImageRef { mimeType: string; base64: string }
@@ -27,6 +28,9 @@ export const VideoGeneratorComponent: React.FC = () => {
   const t = useT();
   const fetch = useFetch();
   const toaster = useToaster();
+
+  const { data: aiConfig } = useAiConfig();
+  const hasVideoProvider = !!aiConfig?.videoProvider;
 
   const [mode, setMode] = useState<Mode>('text');
   const [prompt, setPrompt] = useState('');
@@ -110,6 +114,22 @@ export const VideoGeneratorComponent: React.FC = () => {
     <div className="flex flex-col gap-[16px] max-w-[560px]">
       <div className="text-[20px] font-medium">{t('ai_video_generator', 'AI Video Generator')}</div>
 
+      {hasVideoProvider ? (
+        <div className="text-[13px] text-customColor18">
+          {t('video_provider_label', 'Provider')}: {aiConfig?.videoProvider} · {aiConfig?.videoModel}
+        </div>
+      ) : (
+        <div className="text-[13px] text-customColor18 bg-newBgColorInner border-newTableBorder border rounded-[8px] p-[12px]">
+          {t(
+            'video_no_provider',
+            'No video provider configured. Set up Google Veo in Settings → AI provider first.'
+          )}{' '}
+          <a href="/settings" className="underline">
+            {t('go_to_settings', 'Go to settings')}
+          </a>
+        </div>
+      )}
+
       <div className="flex gap-[8px]">
         {tabBtn('text', t('text_to_video', 'Text to Video'))}
         {tabBtn('frames', t('frames_to_video', 'Frames to Video'))}
@@ -180,7 +200,7 @@ export const VideoGeneratorComponent: React.FC = () => {
         {t('credits_required', 'Credits required')}: {numberOfVideos}
       </div>
 
-      <Button className="rounded-[8px]" loading={generating} onClick={generate}>
+      <Button className="rounded-[8px]" loading={generating} disabled={!hasVideoProvider} onClick={generate}>
         {t('generate_video', 'Generate Video')}
       </Button>
 
