@@ -10,6 +10,7 @@ import { Button } from '@gitroom/react/form/button';
 import { useCalendar } from '@gitroom/frontend/components/launches/calendar.context';
 import { AddEditModal } from '@gitroom/frontend/components/new-launch/add.edit.modal';
 import { KANBAN_COLUMNS, canDrag, canDropOn } from './kanban.helpers';
+import { expandPostsList } from '@gitroom/helpers/utils/posts.list.minify';
 
 const PAGE_SIZE = 20;
 
@@ -60,7 +61,7 @@ const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => 
 
   const { data, mutate, isLoading } = useSWR(
     `/posts/list?state=${column.state}&limit=${PAGE_SIZE}&page=${page}&allDates=true&refresh=${refresh}`,
-    async (url: string) => (await fetch(url)).json(),
+    async (url: string) => expandPostsList(await (await fetch(url)).json()),
     { revalidateOnFocus: false }
   );
 
