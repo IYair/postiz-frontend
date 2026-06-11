@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { Input } from '@gitroom/react/form/input';
+import { Textarea } from '@gitroom/react/form/textarea';
 import { Button } from '@gitroom/react/form/button';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
@@ -13,6 +14,7 @@ interface BrandKit {
   brandLogoUrl: string | null;
   brandColors: string | null;
   brandTypography: string | null;
+  brandVoice: string | null;
 }
 
 const useBrandKit = () => {
@@ -33,6 +35,7 @@ const BrandKitComponent = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [colors, setColors] = useState('');
   const [typography, setTypography] = useState('');
+  const [voice, setVoice] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -41,6 +44,7 @@ const BrandKitComponent = () => {
       setLogoUrl(data.brandLogoUrl ?? '');
       setColors(data.brandColors ?? '');
       setTypography(data.brandTypography ?? '');
+      setVoice(data.brandVoice ?? '');
     }
   }, [data]);
 
@@ -51,6 +55,7 @@ const BrandKitComponent = () => {
       brandLogoUrl: logoUrl.trim() || null,
       brandColors: colors.trim() || null,
       brandTypography: typography.trim() || null,
+      brandVoice: voice.trim() || null,
     };
     await fetch('/settings/brand-kit', {
       method: 'POST',
@@ -59,7 +64,7 @@ const BrandKitComponent = () => {
     setSaving(false);
     mutate(body as BrandKit);
     toaster.show(t('brand_kit_saved', 'Brand kit saved'), 'success');
-  }, [enabled, logoUrl, colors, typography, fetch, mutate, toaster, t]);
+  }, [enabled, logoUrl, colors, typography, voice, fetch, mutate, toaster, t]);
 
   if (isLoading) {
     return (
@@ -126,6 +131,19 @@ const BrandKitComponent = () => {
           setTypography(e.target.value)
         }
         placeholder="Inter for headings, JetBrains Mono for code"
+      />
+      <Textarea
+        name="brandVoice"
+        label={t('brand_voice', 'Brand voice')}
+        disableForm={true}
+        value={voice}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+          setVoice(e.target.value)
+        }
+        placeholder={t(
+          'brand_voice_placeholder',
+          'Tono relajado, slang mexicano ligero, audiencia 25-40, evitar formalismos...'
+        )}
       />
       <div className="flex justify-end">
         <Button onClick={save} loading={saving}>

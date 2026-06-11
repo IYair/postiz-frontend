@@ -16,6 +16,9 @@ import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import EmojiPicker from 'emoji-picker-react';
 import { Theme } from 'emoji-picker-react';
 import { BoldText } from '@gitroom/frontend/components/new-launch/bold.text';
+import { CaptionAssist } from '@gitroom/frontend/components/tools/caption.assist';
+import { HashtagGenerator } from '@gitroom/frontend/components/tools/hashtag.generator';
+import { LineBreaker } from '@gitroom/frontend/components/tools/line.breaker.button';
 import { UText } from '@gitroom/frontend/components/new-launch/u.text';
 import { SignatureBox } from '@gitroom/frontend/components/signature';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
@@ -786,6 +789,18 @@ export const Editor: FC<{
                             currentValue={props.value!}
                           />
                           <BoldText
+                            editor={editorRef?.current?.editor}
+                            currentValue={props.value!}
+                          />
+                          <HashtagGenerator
+                            editor={editorRef?.current?.editor}
+                            currentValue={props.value!}
+                          />
+                          <CaptionAssist
+                            editor={editorRef?.current?.editor}
+                            currentValue={props.value!}
+                          />
+                          <LineBreaker
                             editor={editorRef?.current?.editor}
                             currentValue={props.value!}
                           />
