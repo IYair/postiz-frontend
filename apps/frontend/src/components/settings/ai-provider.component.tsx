@@ -80,6 +80,9 @@ const VIDEO_PROVIDERS = [
 const VIDEO_MODEL_OPTIONS: Record<string, { value: string; label: string }[]> =
   {
     google: [
+      // Veo 3.1: requerido para referencias (ingredients) y fotograma final
+      { value: 'veo-3.1-fast-generate-preview', label: 'Veo 3.1 Fast' },
+      { value: 'veo-3.1-generate-preview', label: 'Veo 3.1' },
       { value: 'veo-3.0-fast-generate-001', label: 'Veo 3 Fast' },
       { value: 'veo-3.0-generate-001', label: 'Veo 3' },
     ],
