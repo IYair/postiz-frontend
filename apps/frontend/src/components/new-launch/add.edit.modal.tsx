@@ -23,6 +23,7 @@ export interface AddEditModalProps {
   mutate: () => void;
   padding?: string;
   customClose?: () => void;
+  forcedPostAction?: 'draft' | 'schedule' | 'now';
   onlyValues?: Array<{
     content: string;
     id?: string;

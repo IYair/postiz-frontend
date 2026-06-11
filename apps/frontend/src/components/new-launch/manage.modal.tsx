@@ -58,7 +58,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
 
-  const { addEditSets, mutate, customClose, dummy } = props;
+  const { addEditSets, mutate, customClose, dummy, forcedPostAction } = props;
 
   const {
     selectedIntegrations,
@@ -647,7 +647,29 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
 
             {/* Save + Calendar — mobile: 2-col grid; desktop: flex row */}
             <div className="grid grid-cols-2 gap-[8px] w-full lg:flex lg:w-auto lg:gap-[8px]">
-              {!addEditSets && (
+              {forcedPostAction && !addEditSets && (
+                <button
+                  disabled={
+                    selectedIntegrations.length === 0 || loading || locked
+                  }
+                  onClick={schedule(forcedPostAction)}
+                  className="text-white relative col-span-2 lg:min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#612BD3] ps-[20px] pe-[16px]"
+                >
+                  {loading && (
+                    <div className="absolute left-[50%] top-[50%] -translate-y-[50%] -translate-x-[50%]">
+                      <div className="animate-spin h-[20px] w-[20px] border-4 border-white border-t-transparent rounded-full" />
+                    </div>
+                  )}
+                  <div className={clsx(loading && 'invisible')}>
+                    {forcedPostAction === 'draft'
+                      ? t('save_as_draft', 'Save as Draft')
+                      : forcedPostAction === 'now'
+                      ? t('post_now', 'Post Now')
+                      : t('add_to_calendar', 'Add to calendar')}
+                  </div>
+                </button>
+              )}
+              {!addEditSets && !forcedPostAction && (
                 <button
                   disabled={
                     selectedIntegrations.length === 0 || loading || locked
@@ -665,7 +687,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                   </div>
                 </button>
               )}
-              {addEditSets && (
+              {addEditSets && !forcedPostAction && (
                 <button
                   className="text-white text-[15px] font-[600] min-w-[180px] btnSub disabled:cursor-not-allowed disabled:opacity-80 outline-none gap-[8px] flex justify-center items-center h-[44px] rounded-[8px] bg-[#612BD3] ps-[20px] pe-[16px]"
                   disabled={
@@ -676,7 +698,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                   Save Set
                 </button>
               )}
-              {!addEditSets && (
+              {!addEditSets && !forcedPostAction && (
                 <div className="group cursor-pointer relative">
                   <button
                     disabled={
