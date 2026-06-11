@@ -10,6 +10,8 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { showMediaBox } from '@gitroom/frontend/components/media/media.component';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { UsernameGenerator } from '@gitroom/frontend/components/tools/channel/username.generator';
+import { BioGenerator } from '@gitroom/frontend/components/tools/channel/bio.generator';
 export const BotPicture: FC<{
   integration: Integrations;
   canChangeProfilePicture: boolean;
@@ -84,14 +86,49 @@ export const BotPicture: FC<{
             </div>
           )}
           {props.canChangeNickName && (
-            <Input
-              value={nick}
-              onChange={(e) => setNickname(e.target.value)}
-              name="Nickname"
-              label={t('label_nickname', 'Nickname')}
-              placeholder=""
-              disableForm={true}
-            />
+            <>
+              <Input
+                value={nick}
+                onChange={(e) => setNickname(e.target.value)}
+                name="Nickname"
+                label={t('label_nickname', 'Nickname')}
+                placeholder=""
+                disableForm={true}
+              />
+              <div className="flex gap-[8px] flex-wrap">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    modal.openModal({
+                      title: t('tools_username_gen', 'Username ideas'),
+                      withCloseButton: true,
+                      children: () => (
+                        <UsernameGenerator
+                          network={props.integration.identifier}
+                          onPick={(v) => setNickname(v)}
+                        />
+                      ),
+                    })
+                  }
+                >
+                  {t('tools_username_gen', 'Username ideas')}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    modal.openModal({
+                      title: t('tools_bio_gen', 'Bio ideas'),
+                      withCloseButton: true,
+                      children: () => (
+                        <BioGenerator network={props.integration.identifier} />
+                      ),
+                    })
+                  }
+                >
+                  {t('tools_bio_gen', 'Bio ideas')}
+                </Button>
+              </div>
+            </>
           )}
 
           <div className="mt-[50px]">

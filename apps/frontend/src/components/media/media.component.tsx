@@ -35,6 +35,7 @@ import { MediaComponentInner } from '@gitroom/frontend/components/launches/helpe
 import { AiVideo } from '@gitroom/frontend/components/launches/ai.video';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { ThirdPartyMediaLibrary } from '@gitroom/frontend/components/third-parties/third-party.media-library';
+import { ImageToolsButton } from '@gitroom/frontend/components/tools/image-tools/image.tools.button';
 import { Dashboard } from '@uppy/react';
 import {
   ChevronLeftIcon,
@@ -444,6 +445,7 @@ export const MediaBox: FC<{
           <div className="flex flex-wrap gap-[8px]">
             {btn}
             <ThirdPartyMediaLibrary onImported={() => mutate()} />
+            <ImageToolsButton onImported={() => mutate()} />
           </div>
         </div>
         <div className="w-full pointer-events-none relative mt-[5px] mb-[5px]">
@@ -506,6 +508,7 @@ export const MediaBox: FC<{
                 <div className="forceChange flex gap-[8px]">
                   {btn}
                   <ThirdPartyMediaLibrary onImported={() => mutate()} />
+                  <ImageToolsButton onImported={() => mutate()} />
                 </div>
               </>
             )}

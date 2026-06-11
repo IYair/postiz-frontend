@@ -67,6 +67,8 @@ import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { Button } from '@gitroom/react/form/button';
 import { useIsMobile } from '@gitroom/frontend/components/launches/helpers/use.is.mobile';
 import { BottomSheet } from '@gitroom/frontend/components/ui/bottom.sheet';
+import { HolidayBadge } from '@gitroom/frontend/components/tools/holidays/holiday.badge';
+import { KanbanView } from '@gitroom/frontend/components/tools/kanban/kanban.view';
 
 // Extend dayjs with necessary plugins
 extend(isSameOrAfter);
@@ -363,8 +365,36 @@ export const DayView = () => {
   );
 };
 export const WeekView = () => {
-  const { startDate, endDate } = useCalendar();
+  const { startDate, endDate, integrations, reloadCalendarView } = useCalendar();
   const t = useT();
+  const modal = useModals();
+
+  const createPostWithContent = useCallback(
+    (content: string, date: dayjs.Dayjs) => {
+      modal.openModal({
+        id: 'add-edit-modal',
+        closeOnClickOutside: false,
+        removeLayout: true,
+        closeOnEscape: false,
+        withCloseButton: false,
+        askClose: true,
+        fullScreen: true,
+        classNames: { modal: 'w-[100%] max-w-[1400px] text-textColor' },
+        children: (
+          <AddEditModal
+            allIntegrations={integrations.map((p) => ({ ...p }))}
+            integrations={integrations.slice(0).map((p) => ({ ...p }))}
+            mutate={reloadCalendarView}
+            onlyValues={[{ content }]}
+            date={date.hour(12)}
+            reopenModal={() => ({})}
+          />
+        ),
+        size: '80%',
+      });
+    },
+    [integrations, reloadCalendarView, modal]
+  );
 
   // Use dayjs to get localized day names
   const localizedDays = useMemo(() => {
@@ -409,6 +439,7 @@ export const WeekView = () => {
                 )}
                 {day.day}
               </div>
+              <HolidayBadge date={day.date} onCreatePost={createPostWithContent} />
             </div>
           ))}
           {hours.map((hour) => (
@@ -435,9 +466,38 @@ export const WeekView = () => {
   );
 };
 export const MonthView = () => {
-  const { startDate, setFilters, customer } = useCalendar();
+  const { startDate, setFilters, customer, integrations, reloadCalendarView } =
+    useCalendar();
   const isMobile = useIsMobile();
   const t = useT();
+  const modal = useModals();
+
+  const createPostWithContent = useCallback(
+    (content: string, date: dayjs.Dayjs) => {
+      modal.openModal({
+        id: 'add-edit-modal',
+        closeOnClickOutside: false,
+        removeLayout: true,
+        closeOnEscape: false,
+        withCloseButton: false,
+        askClose: true,
+        fullScreen: true,
+        classNames: { modal: 'w-[100%] max-w-[1400px] text-textColor' },
+        children: (
+          <AddEditModal
+            allIntegrations={integrations.map((p) => ({ ...p }))}
+            integrations={integrations.slice(0).map((p) => ({ ...p }))}
+            mutate={reloadCalendarView}
+            onlyValues={[{ content }]}
+            date={date.hour(12)}
+            reopenModal={() => ({})}
+          />
+        ),
+        size: '80%',
+      });
+    },
+    [integrations, reloadCalendarView, modal]
+  );
 
   // Use dayjs to get localized day names
   const localizedDays = useMemo(() => {
@@ -502,7 +562,7 @@ export const MonthView = () => {
             return (
               <div
                 key={index}
-                className="text-center items-center justify-center flex cursor-pointer lg:cursor-default"
+                className="relative text-center items-center justify-center flex cursor-pointer lg:cursor-default"
                 onClick={() => {
                   if (isMobile) {
                     setFilters({
@@ -514,6 +574,12 @@ export const MonthView = () => {
                   }
                 }}
               >
+                <div className="absolute left-[6px] right-[6px] top-[6px] z-[10]">
+                  <HolidayBadge
+                    date={cellDate}
+                    onCreatePost={createPostWithContent}
+                  />
+                </div>
                 <CalendarColumn
                   getDate={cellDate}
                   randomHour={true}
@@ -610,7 +676,9 @@ export const Calendar = () => {
   const { display } = useCalendar();
   return (
     <>
-      {display === 'list' ? (
+      {display === 'kanban' ? (
+        <KanbanView />
+      ) : display === 'list' ? (
         <ListView />
       ) : display === 'day' ? (
         <DayView />

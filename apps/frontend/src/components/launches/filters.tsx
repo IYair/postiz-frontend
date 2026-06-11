@@ -1,6 +1,10 @@
 'use client';
 
-import { useCalendar, ListStateFilter } from '@gitroom/frontend/components/launches/calendar.context';
+import {
+  useCalendar,
+  ListStateFilter,
+  CalendarDisplay,
+} from '@gitroom/frontend/components/launches/calendar.context';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback } from 'react';
@@ -11,7 +15,7 @@ import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 
 // Helper function to get start and end dates based on display type
 function getDateRange(
-  display: 'day' | 'week' | 'month' | 'list',
+  display: CalendarDisplay,
   referenceDate?: string
 ) {
   const date = referenceDate ? newDayjs(referenceDate) : newDayjs();
@@ -68,7 +72,7 @@ export const Filters = () => {
   const setToday = useCallback(() => {
     const today = newDayjs();
     const currentRange = getDateRange(
-      calendar.display as 'day' | 'week' | 'month'
+      calendar.display as CalendarDisplay
     );
 
     // Check if we're already showing today's range
@@ -82,7 +86,7 @@ export const Filters = () => {
     calendar.setFilters({
       startDate: currentRange.startDate,
       endDate: currentRange.endDate,
-      display: calendar.display as 'day' | 'week' | 'month',
+      display: calendar.display as CalendarDisplay,
       customer: calendar.customer,
     });
   }, [calendar]);
@@ -155,8 +159,22 @@ export const Filters = () => {
     });
   }, [calendar]);
 
+  const setKanban = useCallback(() => {
+    if (calendar.display === 'kanban') {
+      return;
+    }
+
+    const range = getDateRange('kanban');
+    calendar.setFilters({
+      startDate: range.startDate,
+      endDate: range.endDate,
+      display: 'kanban',
+      customer: calendar.customer,
+    });
+  }, [calendar]);
+
   const setCalendarView = useCallback(() => {
-    if (calendar.display !== 'list') {
+    if (calendar.display !== 'list' && calendar.display !== 'kanban') {
       return;
     }
 
@@ -177,7 +195,7 @@ export const Filters = () => {
       calendar.setFilters({
         startDate: calendar.startDate,
         endDate: calendar.endDate,
-        display: calendar.display as 'day' | 'week' | 'month',
+        display: calendar.display as CalendarDisplay,
         customer: customer,
       });
     },
@@ -203,13 +221,13 @@ export const Filters = () => {
     }
 
     const range = getDateRange(
-      calendar.display as 'day' | 'week' | 'month',
+      calendar.display as CalendarDisplay,
       nextStart.format('YYYY-MM-DD')
     );
     calendar.setFilters({
       startDate: range.startDate,
       endDate: range.endDate,
-      display: calendar.display as 'day' | 'week' | 'month',
+      display: calendar.display as CalendarDisplay,
       customer: calendar.customer,
     });
   }, [calendar]);
@@ -233,13 +251,13 @@ export const Filters = () => {
     }
 
     const range = getDateRange(
-      calendar.display as 'day' | 'week' | 'month',
+      calendar.display as CalendarDisplay,
       prevStart.format('YYYY-MM-DD')
     );
     calendar.setFilters({
       startDate: range.startDate,
       endDate: range.endDate,
-      display: calendar.display as 'day' | 'week' | 'month',
+      display: calendar.display as CalendarDisplay,
       customer: calendar.customer,
     });
   }, [calendar]);
@@ -258,6 +276,7 @@ export const Filters = () => {
   );
 
   const isListView = calendar.display === 'list';
+  const isKanbanView = calendar.display === 'kanban';
 
   const setListStateFilter = useCallback(
     (next: ListStateFilter) => () => {
@@ -288,7 +307,7 @@ export const Filters = () => {
 
   return (
     <div className="text-textColor flex flex-col lg:flex-row gap-[8px] lg:items-center select-none">
-      {!isListView && (
+      {!isListView && !isKanbanView && (
         <div className="flex flex-grow flex-row items-center gap-[10px] w-full lg:w-auto">
           <div className="border h-[42px] border-newTableBorder bg-newTableBorder gap-[1px] flex items-center rounded-[8px] overflow-hidden">
             <div
@@ -431,7 +450,17 @@ export const Filters = () => {
         onChange={(customer: string) => setCustomer(customer)}
         integrations={calendar.integrations}
       />
-      {!isListView && (
+      <div
+        className="cursor-pointer text-[13px] select-none"
+        onClick={() => {
+          const v = localStorage.getItem('hide-holidays') === 'true';
+          localStorage.setItem('hide-holidays', String(!v));
+          window.location.reload();
+        }}
+      >
+        🎉
+      </div>
+      {!isListView && !isKanbanView && (
         <div className="flex flex-row p-[4px] border border-newTableBorder rounded-[8px] text-[14px] font-[500] w-full lg:w-auto">
           <div
             className={clsx(
@@ -467,7 +496,7 @@ export const Filters = () => {
           onClick={setCalendarView}
           className={clsx(
             'pt-[6px] pb-[5px] cursor-pointer flex justify-center items-center w-[34px] text-center rounded-[6px]',
-            !isListView && 'text-textItemFocused bg-boxFocused'
+            !isListView && !isKanbanView && 'text-textItemFocused bg-boxFocused'
           )}
         >
           {/*calendar*/}
@@ -510,6 +539,15 @@ export const Filters = () => {
               strokeLinejoin="round"
             />
           </svg>
+        </div>
+        <div
+          onClick={setKanban}
+          className={clsx(
+            'pt-[6px] pb-[5px] flex justify-center items-center cursor-pointer px-[10px] text-center rounded-[6px]',
+            isKanbanView && 'text-textItemFocused bg-boxFocused'
+          )}
+        >
+          {t('kanban', 'Kanban')}
         </div>
       </div>
     </div>

@@ -27,6 +27,7 @@ extend(isoWeek);
 extend(weekOfYear);
 
 export type ListStateFilter = 'all' | 'scheduled' | 'draft' | 'published';
+export type CalendarDisplay = 'week' | 'month' | 'day' | 'list' | 'kanban';
 
 export const CalendarContext = createContext({
   startDate: newDayjs().startOf('isoWeek').format('YYYY-MM-DD'),
@@ -58,7 +59,7 @@ export const CalendarContext = createContext({
   setFilters: (filters: {
     startDate: string;
     endDate: string;
-    display: 'week' | 'month' | 'day' | 'list';
+    display: CalendarDisplay;
     customer: string | null;
   }) => {
     /** empty **/
@@ -146,7 +147,7 @@ export const CalendarWeekProvider: FC<{
   const [trendings] = useState<string[]>([]);
   const searchParams = useSearchParams();
   const [displaySaved, setDisplaySaved] = useCookie('calendar-display', 'week');
-  const display = searchParams.get('display') || displaySaved;
+  const display = (searchParams.get('display') || displaySaved) as CalendarDisplay;
 
   // List view state
   const [listPage, setListPage] = useState(0);
@@ -216,7 +217,9 @@ export const CalendarWeekProvider: FC<{
     isLoading: calendarIsLoading,
     mutate: mutateCalendar,
   } = useSWR(
-    filters.display !== 'list' ? `/posts-${params}` : null,
+    filters.display !== 'list' && filters.display !== 'kanban'
+      ? `/posts-${params}`
+      : null,
     loadData,
     {
       refreshInterval: 3600000,
@@ -271,7 +274,7 @@ export const CalendarWeekProvider: FC<{
     (newFilters: {
       startDate: string;
       endDate: string;
-      display: 'week' | 'month' | 'day' | 'list';
+      display: CalendarDisplay;
       customer: string | null;
     }) => {
       setDisplaySaved(newFilters.display);
