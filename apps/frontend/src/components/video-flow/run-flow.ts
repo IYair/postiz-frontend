@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useVideoFlowStore } from './video-flow.store';
@@ -25,8 +25,17 @@ interface NodeOutput {
 export const useRunFlow = () => {
   const fetch = useFetch();
   const toaster = useToaster();
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, []);
 
   return useCallback(async () => {
+    if (useVideoFlowStore.getState().running) return;
     const store = useVideoFlowStore.getState();
     const { nodes, edges } = store;
     if (!nodes.length) return;
@@ -57,8 +66,13 @@ export const useRunFlow = () => {
 
     const pollVideoJob = async (jobId: string) => {
       for (let i = 0; i < MAX_POLLS; i++) {
+        if (cancelledRef.current) throw new Error('Run cancelled');
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        const res = await (await fetch(`/media/ai-video/${jobId}`)).json();
+        const pollRes = await fetch(`/media/ai-video/${jobId}`);
+        if (pollRes.status !== 200 && pollRes.status !== 201) {
+          throw new Error(`Poll failed with status ${pollRes.status}`);
+        }
+        const res = await pollRes.json();
         if (res.status === 'done') {
           return res.media as { id: string; path: string }[];
         }
@@ -116,6 +130,10 @@ export const useRunFlow = () => {
         (promptEdge ? outputs[promptEdge.source]?.prompt : data.prompt) || '';
       const mode = resolveVideoMode(!!startEdge, refEdges.length);
 
+      if (mode === 'text' && !prompt) {
+        throw new Error('Video node in text mode requires a prompt');
+      }
+
       const body: any = {
         mode,
         aspectRatio: data.aspectRatio || '16:9',
@@ -157,6 +175,7 @@ export const useRunFlow = () => {
       const order = topologicalOrder(lite, edges);
 
       for (const id of order) {
+        if (cancelledRef.current) throw new Error('Run cancelled');
         const node = nodes.find((n) => n.id === id)!;
         const data: any = node.data;
         const incoming = edges.filter((e) => e.target === id);
@@ -183,7 +202,9 @@ export const useRunFlow = () => {
       }
       toaster.show('Flow completed!', 'success');
     } catch (err: any) {
-      toaster.show(err?.message || 'Flow failed', 'warning');
+      if (err?.message !== 'Run cancelled') {
+        toaster.show(err?.message || 'Flow failed', 'warning');
+      }
     } finally {
       useVideoFlowStore.getState().setRunning(false);
     }

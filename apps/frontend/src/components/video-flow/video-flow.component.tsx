@@ -75,13 +75,13 @@ const FlowCanvas: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-[8px]">
-        <Button secondary={true} className="rounded-[8px]" onClick={() => addNode('text')}>
+        <Button secondary={true} className="rounded-[8px]" disabled={running} onClick={() => addNode('text')}>
           + {t('node_prompt', 'Prompt')}
         </Button>
-        <Button secondary={true} className="rounded-[8px]" onClick={() => addNode('image')}>
+        <Button secondary={true} className="rounded-[8px]" disabled={running} onClick={() => addNode('image')}>
           + {t('node_image', 'Image')}
         </Button>
-        <Button secondary={true} className="rounded-[8px]" onClick={() => addNode('video')}>
+        <Button secondary={true} className="rounded-[8px]" disabled={running} onClick={() => addNode('video')}>
           + {t('node_video', 'Video')}
         </Button>
         <div className="flex-1" />
@@ -96,7 +96,7 @@ const FlowCanvas: React.FC = () => {
         >
           {t('run_flow', 'Run Flow')}
         </Button>
-        <Button secondary={true} className="rounded-[8px]" onClick={clearAll}>
+        <Button secondary={true} className="rounded-[8px]" disabled={running} onClick={clearAll}>
           {t('clear', 'Clear')}
         </Button>
       </div>
