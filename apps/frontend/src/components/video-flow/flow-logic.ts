@@ -42,6 +42,9 @@ const ALLOWED_PAIRS = new Set([
 ]);
 
 // Devuelve un mensaje de error, o null si la conexion es valida.
+// OJO consumidores: `edges` debe ser la lista SIN la conexión propuesta
+// (en reconexiones de xyflow, quitar el edge en curso antes de validar,
+// o los límites por handle darán falso positivo).
 export function validateConnection(
   conn: FlowEdgeLite,
   nodes: FlowNodeLite[],
@@ -58,6 +61,22 @@ export function validateConnection(
 
   const targetEdges = edges.filter((e) => e.target === conn.target);
   const th = conn.targetHandle;
+
+  // Restriccion del SDK Veo: referenceImages no admite image/lastFrame.
+  // Va ANTES de los limites por handle para que el usuario vea el mensaje
+  // de exclusividad y no el de limite cuando ambos aplican.
+  if (
+    th === HANDLE.startIn &&
+    targetEdges.some((e) => e.targetHandle === HANDLE.refIn)
+  ) {
+    return 'references and start frame are mutually exclusive';
+  }
+  if (
+    th === HANDLE.refIn &&
+    targetEdges.some((e) => e.targetHandle === HANDLE.startIn)
+  ) {
+    return 'references and start frame are mutually exclusive';
+  }
 
   if (
     th === HANDLE.promptIn &&
@@ -78,19 +97,6 @@ export function validateConnection(
   ) {
     return `max ${MAX_REFERENCE_EDGES} reference images`;
   }
-  // Restriccion del SDK Veo: referenceImages no admite image/lastFrame.
-  if (
-    th === HANDLE.startIn &&
-    targetEdges.some((e) => e.targetHandle === HANDLE.refIn)
-  ) {
-    return 'references and start frame are mutually exclusive';
-  }
-  if (
-    th === HANDLE.refIn &&
-    targetEdges.some((e) => e.targetHandle === HANDLE.startIn)
-  ) {
-    return 'references and start frame are mutually exclusive';
-  }
 
   if (wouldCreateCycle(conn, edges)) return 'connection would create a cycle';
   return null;
@@ -109,9 +115,9 @@ export function wouldCreateCycle(
   const seen = new Set<string>();
   while (stack.length) {
     const current = stack.pop()!;
-    if (current === conn.source) return true;
     if (seen.has(current)) continue;
     seen.add(current);
+    if (current === conn.source) return true;
     stack.push(...(adjacency.get(current) ?? []));
   }
   return false;
@@ -125,6 +131,10 @@ export function topologicalOrder(
   for (const e of edges) {
     indegree.set(e.target, (indegree.get(e.target) ?? 0) + 1);
   }
+  const adjacency = new Map<string, string[]>();
+  for (const e of edges) {
+    adjacency.set(e.source, [...(adjacency.get(e.source) ?? []), e.target]);
+  }
   const queue = nodes
     .filter((n) => (indegree.get(n.id) ?? 0) === 0)
     .map((n) => n.id);
@@ -132,11 +142,10 @@ export function topologicalOrder(
   while (queue.length) {
     const id = queue.shift()!;
     order.push(id);
-    for (const e of edges) {
-      if (e.source !== id) continue;
-      const d = (indegree.get(e.target) ?? 0) - 1;
-      indegree.set(e.target, d);
-      if (d === 0) queue.push(e.target);
+    for (const neighbor of adjacency.get(id) ?? []) {
+      const d = (indegree.get(neighbor) ?? 0) - 1;
+      indegree.set(neighbor, d);
+      if (d === 0) queue.push(neighbor);
     }
   }
   if (order.length !== nodes.length) throw new Error('graph has a cycle');

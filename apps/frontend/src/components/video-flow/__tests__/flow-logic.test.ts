@@ -76,6 +76,15 @@ describe('wouldCreateCycle', () => {
     expect(wouldCreateCycle(edge('v2', HANDLE.videoOut, 'v1', HANDLE.startIn), edges)).toBe(true);
     expect(wouldCreateCycle(edge('i1', HANDLE.imageOut, 'v1', HANDLE.startIn), edges)).toBe(false);
   });
+
+  it('detecta ciclo transitivo de 3 nodos', () => {
+    const edges = [
+      edge('v1', HANDLE.videoOut, 'v2', HANDLE.startIn),
+      edge('v2', HANDLE.videoOut, 'i1', HANDLE.startIn),
+    ];
+    expect(wouldCreateCycle(edge('i1', HANDLE.imageOut, 'v1', HANDLE.startIn), edges)).toBe(true);
+    expect(wouldCreateCycle(edge('i2', HANDLE.imageOut, 'v1', HANDLE.startIn), edges)).toBe(false);
+  });
 });
 
 describe('topologicalOrder', () => {
@@ -104,6 +113,7 @@ describe('topologicalOrder', () => {
 describe('resolveVideoMode', () => {
   it('ingredients > frames > text', () => {
     expect(resolveVideoMode(false, 2)).toBe('ingredients');
+    expect(resolveVideoMode(true, 2)).toBe('ingredients');
     expect(resolveVideoMode(true, 0)).toBe('frames');
     expect(resolveVideoMode(false, 0)).toBe('text');
   });
