@@ -64,6 +64,7 @@ export const VideoNode: React.FC<NodeProps> = ({ id, data }) => {
           <option value={8}>8s</option>
         </select>
         <input
+          type="number"
           value={d.seed || ''}
           onChange={(e) => updateNodeData(id, { seed: e.target.value })}
           placeholder="seed"

@@ -133,6 +133,9 @@ export const useRunFlow = () => {
       if (mode === 'text' && !prompt) {
         throw new Error('Video node in text mode requires a prompt');
       }
+      if (mode === 'ingredients' && !prompt) {
+        throw new Error('Ingredients mode requires a prompt');
+      }
 
       const body: any = {
         mode,
@@ -141,7 +144,10 @@ export const useRunFlow = () => {
         numberOfVideos: 1,
       };
       if (prompt) body.prompt = prompt;
-      if (data.seed) body.seed = parseInt(String(data.seed), 10);
+      if (data.seed) {
+        const parsedSeed = parseInt(String(data.seed), 10);
+        if (!Number.isNaN(parsedSeed)) body.seed = parsedSeed;
+      }
       if (data.negativePrompt) body.negativePrompt = data.negativePrompt;
       if (startEdge) body.startImage = await resolveIncomingRef(startEdge.source);
       if (refEdges.length) {
