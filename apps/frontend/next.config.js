@@ -49,6 +49,10 @@ const nextConfig = {
             ? '/api/uploads/:path*'
             : '/404',
       },
+      {
+        source: '/api/:path*',
+        destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL}/:path*`,
+      },
     ];
   },
 };
