@@ -37,6 +37,7 @@ function getDateRange(
         endDate: date.endOf('month').format('YYYY-MM-DD'),
       };
     case 'list':
+    case 'kanban':
       return {
         startDate: date.format('YYYY-MM-DD'),
         endDate: date.format('YYYY-MM-DD'),
