@@ -12,6 +12,21 @@ import { XDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/x.
 import { Input } from '@gitroom/react/form/input';
 import { Checkbox } from '@gitroom/react/form/checkbox';
 
+const X_LONG_POST_LIMIT = 25000;
+const X_PREMIUM_SUBSCRIPTIONS = ['Basic', 'Premium', 'PremiumPlus'];
+
+const hasXPremiumSubscription = (settings: any) => {
+  const subscriptionType = settings?.find?.(
+    (p: any) => p?.title === 'Subscription Type'
+  )?.value;
+
+  if (typeof subscriptionType === 'string') {
+    return X_PREMIUM_SUBSCRIPTIONS.includes(subscriptionType);
+  }
+
+  return !!settings?.find?.((p: any) => p?.title === 'Verified')?.value;
+};
+
 const whoCanReply = [
   {
     label: 'Everyone',
@@ -89,8 +104,8 @@ export default withProvider({
   CustomPreviewComponent: undefined,
   dto: XDto,
   maximumCharacters: (settings) => {
-    if (settings?.[0]?.value) {
-      return 4000;
+    if (hasXPremiumSubscription(settings)) {
+      return X_LONG_POST_LIMIT;
     }
     return 280;
   },
