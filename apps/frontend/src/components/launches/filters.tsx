@@ -12,6 +12,7 @@ import { SelectCustomer } from '@gitroom/frontend/components/launches/select.cus
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import i18next from 'i18next';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
+import { useHolidayVisibility } from '@gitroom/frontend/components/tools/holidays/holiday.badge';
 
 // Helper function to get start and end dates based on display type
 function getDateRange(
@@ -48,6 +49,7 @@ function getDateRange(
 export const Filters = () => {
   const calendar = useCalendar();
   const t = useT();
+  const [holidaysVisible, setHolidaysVisible] = useHolidayVisibility();
 
   // Set dayjs locale based on current language
   const currentLanguage = i18next.resolvedLanguage || 'en';
@@ -451,16 +453,29 @@ export const Filters = () => {
         onChange={(customer: string) => setCustomer(customer)}
         integrations={calendar.integrations}
       />
-      <div
-        className="cursor-pointer text-[13px] select-none"
-        onClick={() => {
-          const v = localStorage.getItem('hide-holidays') === 'true';
-          localStorage.setItem('hide-holidays', String(!v));
-          window.location.reload();
-        }}
+      <button
+        type="button"
+        aria-pressed={holidaysVisible}
+        aria-label={
+          holidaysVisible
+            ? t('hide_holidays', 'Hide holidays')
+            : t('show_holidays', 'Show holidays')
+        }
+        title={
+          holidaysVisible
+            ? t('hide_holidays', 'Hide holidays')
+            : t('show_holidays', 'Show holidays')
+        }
+        className={clsx(
+          'cursor-pointer text-[13px] select-none rounded-[8px] border border-newTableBorder px-[10px] py-[6px] transition-colors',
+          holidaysVisible
+            ? 'bg-boxFocused text-textItemFocused'
+            : 'text-newTableText opacity-60 hover:opacity-100'
+        )}
+        onClick={() => setHolidaysVisible(!holidaysVisible)}
       >
         🎉
-      </div>
+      </button>
       {!isListView && !isKanbanView && (
         <div className="flex flex-row p-[4px] border border-newTableBorder rounded-[8px] text-[14px] font-[500] w-full lg:w-auto">
           <div

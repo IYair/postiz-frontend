@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, MouseEvent, useCallback } from 'react';
+import { FC, MouseEvent, useCallback, useSyncExternalStore } from 'react';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
@@ -15,14 +15,71 @@ interface Holiday {
   hashtags: string[];
 }
 
+export const HOLIDAY_VISIBILITY_STORAGE_KEY = 'show-holidays';
+export const HOLIDAY_VISIBILITY_CHANGE_EVENT = 'holiday-visibility-change';
+const LEGACY_HOLIDAY_VISIBILITY_STORAGE_KEY = 'hide-holidays';
+
+export const areHolidaysVisible = () => {
+  if (typeof window === 'undefined') return true;
+
+  try {
+    const storedVisibility = localStorage.getItem(HOLIDAY_VISIBILITY_STORAGE_KEY);
+    if (storedVisibility !== null) return storedVisibility !== 'false';
+
+    if (localStorage.getItem(LEGACY_HOLIDAY_VISIBILITY_STORAGE_KEY) === 'true') {
+      localStorage.setItem(HOLIDAY_VISIBILITY_STORAGE_KEY, 'false');
+      return false;
+    }
+
+    return true;
+  } catch {
+    return true;
+  }
+};
+
+export const setHolidaysVisible = (visible: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(HOLIDAY_VISIBILITY_STORAGE_KEY, String(visible));
+  } catch {
+    // Storage unavailable falls back to areHolidaysVisible(), which returns true.
+  }
+
+  window.dispatchEvent(new Event(HOLIDAY_VISIBILITY_CHANGE_EVENT));
+};
+
+const subscribeHolidayVisibility = (onStoreChange: () => void) => {
+  window.addEventListener(HOLIDAY_VISIBILITY_CHANGE_EVENT, onStoreChange);
+  window.addEventListener('storage', onStoreChange);
+
+  return () => {
+    window.removeEventListener(HOLIDAY_VISIBILITY_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener('storage', onStoreChange);
+  };
+};
+
+export const useHolidayVisibility = () => {
+  const visible = useSyncExternalStore(
+    subscribeHolidayVisibility,
+    areHolidaysVisible,
+    () => true
+  );
+
+  const setVisibility = useCallback((nextVisible: boolean) => {
+    setHolidaysVisible(nextVisible);
+  }, []);
+
+  return [visible, setVisibility] as const;
+};
+
 export const useHolidays = (date: dayjs.Dayjs) => {
   const fetch = useFetch();
+  const [holidaysVisible] = useHolidayVisibility();
   const month = date.month() + 1;
   const year = date.year();
   const { data } = useSWR<Holiday[]>(
-    typeof window !== 'undefined' && localStorage.getItem('hide-holidays') === 'true'
-      ? null
-      : `/tools/holidays?month=${month}&year=${year}`,
+    holidaysVisible ? `/tools/holidays?month=${month}&year=${year}` : null,
     async (url: string) => {
       const res = await fetch(url);
       if (!res.ok) return [];
