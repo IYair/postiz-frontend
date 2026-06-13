@@ -8,6 +8,7 @@ import ShortlinkPreferenceComponent from '@gitroom/frontend/components/settings/
 import ImagePromptExtraComponent from '@gitroom/frontend/components/settings/image-prompt-extra.component';
 import ImagePresetsComponent from '@gitroom/frontend/components/settings/image-presets.component';
 import BrandKitComponent from '@gitroom/frontend/components/settings/brand-kit.component';
+import HolidayLocationComponent from '@gitroom/frontend/components/settings/holiday-location.component';
 
 const MetricComponent = dynamic(
   () => import('@gitroom/frontend/components/settings/metric.component'),
@@ -22,6 +23,7 @@ export const GlobalSettings = () => {
     <div className="flex flex-col">
       <h3 className="text-[20px]">{t('global_settings', 'Global Settings')}</h3>
       <MetricComponent />
+      <HolidayLocationComponent />
       <EmailNotificationsComponent />
       <ShortlinkPreferenceComponent />
       <BrandKitComponent />
