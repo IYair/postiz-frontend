@@ -17,6 +17,8 @@ type Notification = {
   image?: string | null;
 };
 
+type NotificationTone = 'success' | 'fail' | 'info' | 'default';
+
 const urlRegex =
   /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
 
@@ -34,6 +36,93 @@ const getNotificationContent = (notification: Notification) => {
     .trim();
 };
 
+export const getNotificationTone = (
+  notification: Pick<Notification, 'content'>
+): NotificationTone => {
+  const content = notification.content.toLowerCase();
+
+  if (
+    content.includes('could not refresh') ||
+    content.includes("couldn't refresh") ||
+    content.includes('refresh your') ||
+    content.includes('reconnect') ||
+    content.includes('connect it again') ||
+    content.includes('please enable') ||
+    content.includes('disabled')
+  ) {
+    return 'info';
+  }
+
+  if (
+    content.includes('error occurred') ||
+    content.includes('unknown error') ||
+    content.includes('error posting') ||
+    content.includes("couldn't post") ||
+    content.includes('failed')
+  ) {
+    return 'fail';
+  }
+
+  if (content.includes('has been published')) {
+    return 'success';
+  }
+
+  return 'default';
+};
+
+export const getNotificationVisual = (
+  notification: Pick<Notification, 'content'>,
+  hasImage: boolean
+) => {
+  if (hasImage) {
+    return {
+      label: '',
+      title: 'Notification',
+      translationKey: 'notification_update',
+      className: '',
+    };
+  }
+
+  const tone = getNotificationTone(notification);
+  const visual = {
+    fail: {
+      label: '!',
+      title: 'Error',
+      translationKey: 'notification_error',
+      className:
+        'bg-rose-500/15 text-rose-200 outline-rose-400/40 shadow-[0_0_24px_rgba(244,63,94,0.18)]',
+    },
+    info: {
+      label: 'i',
+      title: 'Action required',
+      translationKey: 'notification_action_required',
+      className:
+        'bg-amber-500/15 text-amber-100 outline-amber-300/40 shadow-[0_0_24px_rgba(245,158,11,0.18)]',
+    },
+    success: {
+      label: 'P',
+      title: 'Post published',
+      translationKey: 'notification_post_published',
+      className:
+        'bg-emerald-500/15 text-emerald-100 outline-emerald-300/40 shadow-[0_0_24px_rgba(16,185,129,0.16)]',
+    },
+    default: {
+      label: 'N',
+      title: 'Notification',
+      translationKey: 'notification_update',
+      className:
+        'bg-indigo-500/15 text-indigo-100 outline-indigo-300/40 shadow-[0_0_24px_rgba(99,102,241,0.18)]',
+    },
+  } satisfies Record<NotificationTone, {
+    label: string;
+    title: string;
+    translationKey: string;
+    className: string;
+  }>;
+
+  return visual[tone];
+};
+
 export const ShowNotification: FC<{
   notification: Notification;
   lastReadNotification: string;
@@ -49,6 +138,7 @@ export const ShowNotification: FC<{
   const image = notification.image?.includes('.mp4')
     ? undefined
     : notification.image;
+  const visual = getNotificationVisual(notification, Boolean(image));
 
   return (
     <Transition show={true} appear={true}>
@@ -68,7 +158,16 @@ export const ShowNotification: FC<{
                   className="size-10 rounded-full bg-gray-800 object-cover outline outline-1 -outline-offset-1 outline-white/10"
                 />
               ) : (
-                <div className="size-10 rounded-full bg-seventh outline outline-1 -outline-offset-1 outline-white/10" />
+                <div
+                  role="img"
+                  aria-label={visual.title}
+                  className={clsx(
+                    'flex size-10 items-center justify-center rounded-full text-base font-black outline outline-1 -outline-offset-1',
+                    visual.className
+                  )}
+                >
+                  {visual.label}
+                </div>
               )}
             </div>
             <div className="ml-3 w-0 flex-1">
@@ -78,7 +177,7 @@ export const ShowNotification: FC<{
                   newNotification && 'font-bold'
                 )}
               >
-                {t('notification_update', 'Notification')}
+                {t(visual.translationKey, visual.title)}
               </p>
               <p className="mt-1 line-clamp-3 text-sm text-gray-400">
                 {content || notification.content}
