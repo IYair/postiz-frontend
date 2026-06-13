@@ -20,6 +20,9 @@ type Notification = {
 const urlRegex =
   /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
 
+export const notificationPopupClassName =
+  'opacity-0 animate-normalFadeDown mt-[10px] absolute w-[calc(100vw-32px)] max-w-[420px] sm:w-[420px] min-h-[200px] top-[100%] end-0 bg-third text-textColor rounded-[16px] flex flex-col border border-tableBorder z-[600]';
+
 const getNotificationLink = (notification: Notification) => {
   return notification.link || notification.content.match(urlRegex)?.[0];
 };
@@ -109,7 +112,7 @@ export const NotificationOpenComponent = () => {
   return (
     <div
       id="notification-popup"
-      className="opacity-0 animate-normalFadeDown mt-[10px] absolute w-[420px] min-h-[200px] top-[100%] end-0 bg-third text-textColor rounded-[16px] flex flex-col border border-tableBorder z-[600]"
+      className={notificationPopupClassName}
     >
       <div
         className={`p-[16px] border-b border-tableBorder font-bold`}
