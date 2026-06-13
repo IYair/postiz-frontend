@@ -1,69 +1,119 @@
 'use client';
 
-import { DragEvent, FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DragEvent, FC, KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { Button } from '@gitroom/react/form/button';
 import { useCalendar } from '@gitroom/frontend/components/launches/calendar.context';
 import { AddEditModal } from '@gitroom/frontend/components/new-launch/add.edit.modal';
-import { KANBAN_COLUMNS, canDrag, canDropOn } from './kanban.helpers';
+import { ExistingDataContextProvider } from '@gitroom/frontend/components/launches/helpers/use.existing.data';
+import {
+  KANBAN_COLUMNS,
+  canDragPost,
+  getKanbanTransition,
+  getDefaultScheduleDate,
+  KanbanTransition,
+} from './kanban.helpers';
 import { expandPostsList } from '@gitroom/helpers/utils/posts.list.minify';
+
+dayjs.extend(utc);
 
 const PAGE_SIZE = 20;
 
-const RescheduleModal: FC<{
-  postId: string;
+const TransitionModal: FC<{
+  group: string;
+  post: any;
+  transition: KanbanTransition;
   onDone: () => void;
   close: () => void;
-}> = ({ postId, onDone, close }) => {
+}> = ({ group, post, transition, onDone, close }) => {
   const fetch = useFetch();
   const toaster = useToaster();
   const [value, setValue] = useState(
-    dayjs().add(1, 'hour').format('YYYY-MM-DDTHH:mm')
+    transition.requiresDate
+      ? dayjs(getDefaultScheduleDate(post)).format('YYYY-MM-DDTHH:mm')
+      : ''
   );
+  const [isSaving, setIsSaving] = useState(false);
 
   const save = useCallback(async () => {
-    await fetch(`/posts/${postId}/date`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        date: dayjs(value).utc().format('YYYY-MM-DDTHH:mm:ss'),
-        action: 'schedule',
-      }),
-    });
-    toaster.show('Rescheduled', 'success');
-    onDone();
-    close();
-  }, [postId, value, fetch, onDone, close, toaster]);
+    if (transition.requiresDate) {
+      const chosen = dayjs(value);
+      if (!chosen.isValid() || chosen.isBefore(dayjs())) {
+        toaster.show('Please choose a future date', 'warning');
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      const body: any = {
+        target: transition.target,
+      };
+      if (transition.requiresDate) {
+        body.date = dayjs(value).utc().format('YYYY-MM-DDTHH:mm:ss');
+      }
+
+      const response = await fetch(`/posts/group/${group}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to update status');
+      }
+
+      toaster.show(transition.title, 'success');
+      onDone();
+      close();
+    } catch (err) {
+      toaster.show(
+        typeof err === 'string' ? err : 'Failed to update status',
+        'warning'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }, [group, transition, value, fetch, onDone, close, toaster]);
 
   return (
     <div className="flex flex-col gap-[12px]">
-      <input
-        type="datetime-local"
-        className="bg-newColColor rounded-[8px] p-[12px] text-textColor"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <Button onClick={save}>Schedule</Button>
+      {transition.requiresDate && (
+        <input
+          type="datetime-local"
+          className="bg-newColColor rounded-[8px] p-[12px] text-textColor"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      )}
+      <Button onClick={save} disabled={isSaving}>
+        {transition.submitLabel}
+      </Button>
     </div>
   );
 };
 
-const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => {
+export const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => {
   const fetch = useFetch();
   const modals = useModals();
+  const toaster = useToaster();
+  const { integrations, reloadCalendarView } = useCalendar();
+
   const [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(0);
-  const [loadedPosts, setLoadedPosts] = useState<any[]>([]);
-  const { integrations, reloadCalendarView } = useCalendar();
 
   const { data, mutate, isLoading } = useSWR(
     `/posts/list?state=${column.state}&limit=${PAGE_SIZE}&page=${page}&allDates=true&refresh=${refresh}`,
     async (url: string) => expandPostsList(await (await fetch(url)).json()),
     { revalidateOnFocus: false }
   );
+
+  const [loadedPosts, setLoadedPosts] = useState<any[]>(data?.posts || []);
 
   const total: number = data?.total ?? 0;
   const hasMore: boolean = data?.hasMore ?? false;
@@ -120,21 +170,102 @@ const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => 
     });
   }, [createAction, createDate, integrations, modals, refreshColumn]);
 
-  const onDrop = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      const postId = e.dataTransfer.getData('postId');
-      const postState = e.dataTransfer.getData('postState');
-      if (!postId || !canDropOn(postState, column.state)) return;
+  const openEdit = useCallback(
+    async (post: any) => {
+      try {
+        const data = await (await fetch(`/posts/group/${post.group}`)).json();
+        const publishDate = dayjs.utc(data.posts[0]?.publishDate).local();
+
+        modals.openModal({
+          id: 'add-edit-modal',
+          closeOnClickOutside: false,
+          removeLayout: true,
+          closeOnEscape: false,
+          withCloseButton: false,
+          askClose: true,
+          fullScreen: true,
+          classNames: { modal: 'w-[100%] max-w-[1400px] text-textColor' },
+          children: (
+            <ExistingDataContextProvider value={data}>
+              <AddEditModal
+                allIntegrations={integrations.map((p) => ({ ...p }))}
+                integrations={integrations
+                  .slice(0)
+                  .filter((f) => f.id === data.integration)
+                  .map((p) => ({
+                    ...p,
+                    picture: data.integrationPicture,
+                  }))}
+                mutate={refreshColumn}
+                date={publishDate}
+                reopenModal={() => openEdit(post)}
+              />
+            </ExistingDataContextProvider>
+          ),
+          size: '80%',
+        });
+      } catch (err) {
+        toaster.show(
+          typeof err === 'string' ? err : 'Failed to load post for editing',
+          'warning'
+        );
+      }
+    },
+    [fetch, integrations, modals, refreshColumn, toaster]
+  );
+
+  const openTransition = useCallback(
+    (post: any, targetColumn: string) => {
+      const transition = getKanbanTransition(post.state, targetColumn as any);
+      if (transition.kind === 'invalid') {
+        toaster.show(transition.description || 'Move not allowed', 'warning');
+        return;
+      }
+      if (transition.kind === 'noop') {
+        return;
+      }
       modals.openModal({
-        title: 'Reschedule post',
+        title: transition.title,
         withCloseButton: true,
         children: (close: () => void) => (
-          <RescheduleModal postId={postId} onDone={refreshColumn} close={close} />
+          <TransitionModal
+            group={post.group}
+            post={post}
+            transition={transition}
+            onDone={refreshColumn}
+            close={close}
+          />
         ),
       });
     },
-    [column.state, modals, refreshColumn]
+    [modals, refreshColumn, toaster]
+  );
+
+  const onCardKeyDown = useCallback(
+    (post: any) => (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openEdit(post);
+      }
+    },
+    [openEdit]
+  );
+
+  const onDrop = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      const raw = e.dataTransfer.getData('application/json');
+      if (!raw) return;
+      let post: any;
+      try {
+        post = JSON.parse(raw);
+      } catch {
+        return;
+      }
+      if (!post?.group || !post?.state) return;
+      openTransition(post, column.state);
+    },
+    [column.state, openTransition]
   );
 
   return (
@@ -142,6 +273,7 @@ const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => 
       className="flex-1 min-w-[280px] bg-newBgColorInner rounded-[12px] p-[12px] flex flex-col gap-[10px] max-h-[calc(100vh-190px)]"
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
+      aria-label={`${column.label} column`}
     >
       <div className="font-bold text-[14px] flex justify-between items-center">
         <span>{column.label}</span>
@@ -158,38 +290,75 @@ const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column }) => 
         </span>
       </button>
       <div className="flex flex-col gap-[8px] overflow-y-auto scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner pe-[2px]">
-      {loadedPosts.map((post) => (
-        <div
-          key={post.id}
-          draggable={canDrag(post.state)}
-          onDragStart={(e) => {
-            e.dataTransfer.setData('postId', post.id);
-            e.dataTransfer.setData('postState', post.state);
-          }}
-          className={
-            'bg-newColColor rounded-[10px] p-[12px] text-[13px] flex flex-col gap-[8px] border border-newTextColor/5 ' +
-            (canDrag(post.state) ? 'cursor-grab' : 'cursor-default')
-          }
-        >
-          <div className="flex items-center gap-[8px] min-w-0">
-            {post.integration?.picture && (
-              <img
-                src={post.integration.picture}
-                className="w-[22px] h-[22px] rounded-full shrink-0"
-                alt=""
-              />
-            )}
-            <span className="opacity-80 truncate">{post.integration?.name}</span>
-          </div>
-          <div className="line-clamp-4 leading-[1.45] text-[13px]">
-            {(post.content || '').replace(/<[^>]+>/g, ' ').trim() || 'No content'}
-          </div>
-          <div className="flex justify-between gap-[8px] opacity-55 text-[12px]">
-            <span>{post.state}</span>
-            <span>{dayjs.utc(post.publishDate).local().format('DD MMM YYYY HH:mm')}</span>
-          </div>
-        </div>
-      ))}
+        {loadedPosts.map((post) => {
+          const transitions = KANBAN_COLUMNS.map((c) => ({
+            column: c,
+            transition: getKanbanTransition(post.state, c.state),
+          })).filter(
+            ({ transition }) =>
+              transition.kind !== 'invalid' && transition.kind !== 'noop'
+          );
+
+          return (
+            <div
+              key={post.id}
+              draggable={canDragPost(post.state)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify({
+                    group: post.group,
+                    state: post.state,
+                    publishDate: post.publishDate,
+                  })
+                );
+              }}
+              onClick={() => openEdit(post)}
+              onKeyDown={onCardKeyDown(post)}
+              tabIndex={0}
+              role="button"
+              aria-label={`Post by ${post.integration?.name || 'unknown'} in ${post.state} state`}
+              className={
+                'bg-newColColor rounded-[10px] p-[12px] text-[13px] flex flex-col gap-[8px] border border-newTextColor/5 ' +
+                (canDragPost(post.state) ? 'cursor-grab' : 'cursor-default')
+              }
+            >
+              <div className="flex items-center gap-[8px] min-w-0">
+                {post.integration?.picture && (
+                  <img
+                    src={post.integration.picture}
+                    className="w-[22px] h-[22px] rounded-full shrink-0"
+                    alt=""
+                  />
+                )}
+                <span className="opacity-80 truncate">{post.integration?.name}</span>
+              </div>
+              <div className="line-clamp-4 leading-[1.45] text-[13px]">
+                {(post.content || '').replace(/<[^>]+>/g, ' ').trim() || 'No content'}
+              </div>
+              <div className="flex justify-between gap-[8px] opacity-55 text-[12px]">
+                <span>{post.state}</span>
+                <span>{dayjs.utc(post.publishDate).local().format('DD MMM YYYY HH:mm')}</span>
+              </div>
+              {transitions.length > 0 && (
+                <div className="flex flex-wrap gap-[6px] pt-[4px]">
+                  {transitions.map(({ column: targetColumn, transition }) => (
+                    <Button
+                      key={targetColumn.state}
+                      className="text-[11px] py-[4px] px-[8px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openTransition(post, targetColumn.state);
+                      }}
+                    >
+                      {transition.submitLabel}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       {hasMore && (
         <Button onClick={() => setPage((value) => value + 1)}>
