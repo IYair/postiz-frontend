@@ -16,7 +16,8 @@ const mockPosts = vi.hoisted(() => ({
       publishDate: '2024-06-12T10:00:00Z',
       integration: {
         id: 'int-1',
-        name: 'Test Integration',
+        name: 'X Account',
+        providerIdentifier: 'twitter',
         picture: 'https://example.com/pic.png',
       },
     },
@@ -31,6 +32,7 @@ const mockPosts = vi.hoisted(() => ({
       integration: {
         id: 'int-2',
         name: 'Scheduled Integration',
+        providerIdentifier: 'linkedin',
         picture: 'https://example.com/pic2.png',
       },
     },
@@ -45,6 +47,7 @@ const mockPosts = vi.hoisted(() => ({
       integration: {
         id: 'int-3',
         name: 'Published Integration',
+        providerIdentifier: 'instagram',
         picture: 'https://example.com/pic3.png',
       },
     },
@@ -59,6 +62,7 @@ const mockPosts = vi.hoisted(() => ({
       integration: {
         id: 'int-4',
         name: 'Error Integration',
+        providerIdentifier: 'facebook',
         picture: 'https://example.com/pic4.png',
       },
     },
@@ -124,20 +128,19 @@ describe('KanbanView', () => {
     expect(card.getAttribute('tabindex')).toBe('0');
   });
 
-  it('renders action buttons for each post', () => {
+  it('does not render workflow action buttons inside cards', () => {
     const draftColumn = doc.querySelector('[aria-label="Draft column"]')!;
     const card = within(draftColumn as HTMLElement).getByRole('button', { name: /Post by/ });
     const buttons = card.querySelectorAll('button');
-    expect(buttons.length).toBeGreaterThan(0);
+    expect(buttons.length).toBe(0);
+    expect(card.textContent).not.toContain('Publish now');
+    expect(card.textContent).not.toContain('Schedule');
+  });
 
-    // Clicking an action button should fire the event
-    let actionClicked = false;
-    buttons[0].addEventListener('click', (e) => {
-      e.stopPropagation();
-      actionClicked = true;
-    });
-    fireEvent.click(buttons[0]);
-    expect(actionClicked).toBe(true);
+  it('renders a social network badge on the card avatar', () => {
+    const draftColumn = doc.querySelector('[aria-label="Draft column"]')!;
+    expect(draftColumn.textContent).toContain('X Account');
+    expect(within(draftColumn as HTMLElement).getByLabelText('Social network X')).toBeTruthy();
   });
 
   it('renders correct transition options for drag and drop', () => {

@@ -24,6 +24,59 @@ dayjs.extend(utc);
 
 const PAGE_SIZE = 20;
 
+const COLUMN_DESCRIPTIONS: Record<string, string> = {
+  draft: 'Ideas and posts being edited',
+  scheduled: 'Waiting for publish time',
+  published: 'Already sent to channels',
+  error: 'Needs attention or retry',
+};
+
+const STATE_BADGES: Record<string, string> = {
+  DRAFT: 'Draft',
+  QUEUE: 'Scheduled',
+  SCHEDULED: 'Scheduled',
+  PUBLISHED: 'Published',
+  ERROR: 'Error',
+};
+
+const SOCIAL_LABELS: Record<string, string> = {
+  x: 'X',
+  twitter: 'X',
+  linkedin: 'in',
+  facebook: 'f',
+  instagram: 'ig',
+  threads: '@',
+  youtube: 'YT',
+  tiktok: 'TT',
+  pinterest: 'p',
+  reddit: 'r',
+  bluesky: 'b',
+  mastodon: 'm',
+};
+
+const getSocialLabel = (post: any): string => {
+  const values = [
+    post?.integration?.providerIdentifier,
+    post?.integration?.provider,
+    post?.integration?.identifier,
+    post?.integration?.type,
+    post?.integration?.name,
+  ];
+
+  const value = values
+    .find((item) => typeof item === 'string' && item.trim())
+    ?.toLowerCase();
+
+  if (!value) return '';
+
+  const key = Object.keys(SOCIAL_LABELS).find((item) => value.includes(item));
+  return key ? SOCIAL_LABELS[key] : '';
+};
+
+const getPlainContent = (content?: string): string =>
+  (content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() ||
+  'No content';
+
 const TransitionModal: FC<{
   group: string;
   post: any;
@@ -82,18 +135,36 @@ const TransitionModal: FC<{
   }, [group, transition, value, fetch, onDone, close, toaster]);
 
   return (
-    <div className="flex flex-col gap-[12px]">
+    <div className="flex flex-col gap-[18px] text-textColor">
+      <div className="flex flex-col gap-[6px]">
+        <div className="text-[18px] font-[700]">{transition.title}</div>
+        <div className="text-[14px] leading-[1.5] text-newTextColor/70">
+          {transition.description}
+        </div>
+      </div>
       {transition.requiresDate && (
-        <input
-          type="datetime-local"
-          className="bg-newColColor rounded-[8px] p-[12px] text-textColor"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
+        <label className="flex flex-col gap-[8px] text-[13px] text-newTextColor/70">
+          Publish date
+          <input
+            type="datetime-local"
+            className="h-[44px] bg-newColColor rounded-[8px] px-[12px] text-textColor outline-none border border-newTextColor/10 focus:border-[#612BD3]"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </label>
       )}
-      <Button onClick={save} disabled={isSaving}>
-        {transition.submitLabel}
-      </Button>
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-[10px]">
+        <button
+          type="button"
+          onClick={close}
+          className="h-[40px] px-[18px] rounded-[8px] bg-newColColor text-textColor border border-newTextColor/10 hover:border-newTextColor/20"
+        >
+          Cancel
+        </button>
+        <Button onClick={save} loading={isSaving} className="rounded-[8px]">
+          {transition.submitLabel}
+        </Button>
+      </div>
     </div>
   );
 };
@@ -270,18 +341,25 @@ export const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column
 
   return (
     <div
-      className="flex-1 min-w-[280px] bg-newBgColorInner rounded-[12px] p-[12px] flex flex-col gap-[10px] max-h-[calc(100vh-190px)]"
+      className="group/column flex-1 min-w-[300px] sm:min-w-[320px] bg-newBgColorInner rounded-[14px] p-[12px] flex flex-col gap-[12px] max-h-[calc(100vh-180px)] border border-newTextColor/5 transition-colors hover:border-newTextColor/10"
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
       aria-label={`${column.label} column`}
     >
-      <div className="font-bold text-[14px] flex justify-between items-center">
-        <span>{column.label}</span>
-        <span className="opacity-50">{total || ''}</span>
+      <div className="flex justify-between items-start gap-[10px]">
+        <div className="flex flex-col gap-[2px] min-w-0">
+          <span className="font-bold text-[15px] text-textColor">{column.label}</span>
+          <span className="text-[12px] leading-[1.35] text-newTextColor/55 truncate">
+            {COLUMN_DESCRIPTIONS[column.state]}
+          </span>
+        </div>
+        <span className="min-w-[28px] h-[24px] px-[8px] rounded-full bg-newColColor border border-newTextColor/10 text-[12px] text-newTextColor/70 flex items-center justify-center">
+          {total || 0}
+        </span>
       </div>
       <button
         onClick={openCreate}
-        className="border border-dashed border-newTextColor/20 rounded-[10px] min-h-[58px] text-newTextColor/60 hover:text-white hover:border-[#612BD3] hover:bg-[#612BD3]/10 transition-colors flex flex-col items-center justify-center gap-[2px]"
+        className="border border-dashed border-newTextColor/15 rounded-[12px] min-h-[64px] text-newTextColor/60 hover:text-white hover:border-[#612BD3] hover:bg-[#612BD3]/10 focus:outline-none focus:border-[#612BD3] transition-colors flex flex-col items-center justify-center gap-[4px]"
         title={column.state === 'error' ? 'Create draft to fix' : `Create ${column.label}`}
       >
         <span className="text-[24px] leading-[20px]">+</span>
@@ -291,18 +369,14 @@ export const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column
       </button>
       <div className="flex flex-col gap-[8px] overflow-y-auto scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner pe-[2px]">
         {loadedPosts.map((post) => {
-          const transitions = KANBAN_COLUMNS.map((c) => ({
-            column: c,
-            transition: getKanbanTransition(post.state, c.state),
-          })).filter(
-            ({ transition }) =>
-              transition.kind !== 'invalid' && transition.kind !== 'noop'
-          );
+          const socialLabel = getSocialLabel(post);
+          const stateLabel = STATE_BADGES[post.state] || post.state;
+          const canDrag = canDragPost(post.state);
 
           return (
             <div
               key={post.id}
-              draggable={canDragPost(post.state)}
+              draggable={canDrag}
               onDragStart={(e) => {
                 e.dataTransfer.setData(
                   'application/json',
@@ -319,41 +393,51 @@ export const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column
               role="button"
               aria-label={`Post by ${post.integration?.name || 'unknown'} in ${post.state} state`}
               className={
-                'bg-newColColor rounded-[10px] p-[12px] text-[13px] flex flex-col gap-[8px] border border-newTextColor/5 ' +
-                (canDragPost(post.state) ? 'cursor-grab' : 'cursor-default')
+                'group/card bg-newColColor rounded-[12px] p-[12px] text-[13px] flex flex-col gap-[10px] border border-newTextColor/5 transition-all outline-none hover:border-[#612BD3]/40 hover:bg-newTextColor/[0.03] focus:border-[#612BD3] focus:ring-1 focus:ring-[#612BD3]/60 ' +
+                (canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer')
               }
             >
-              <div className="flex items-center gap-[8px] min-w-0">
-                {post.integration?.picture && (
-                  <img
-                    src={post.integration.picture}
-                    className="w-[22px] h-[22px] rounded-full shrink-0"
-                    alt=""
-                  />
-                )}
-                <span className="opacity-80 truncate">{post.integration?.name}</span>
+              <div className="flex items-center justify-between gap-[10px] min-w-0">
+                <div className="flex items-center gap-[9px] min-w-0">
+                  <div className="relative w-[28px] h-[28px] shrink-0">
+                    {post.integration?.picture ? (
+                      <img
+                        src={post.integration.picture}
+                        className="w-[28px] h-[28px] rounded-full object-cover border border-newTextColor/10"
+                        alt=""
+                      />
+                    ) : (
+                      <div className="w-[28px] h-[28px] rounded-full bg-newBgColorInner border border-newTextColor/10" />
+                    )}
+                    {socialLabel && (
+                      <span
+                        className="absolute -bottom-[3px] -end-[3px] min-w-[15px] h-[15px] px-[3px] rounded-full bg-newBgColorInner border border-newTextColor/15 text-[8px] font-[800] leading-none text-white flex items-center justify-center"
+                        aria-label={`Social network ${socialLabel}`}
+                      >
+                        {socialLabel}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[13px] font-[600] text-textColor truncate">
+                      {post.integration?.name || 'Unknown channel'}
+                    </span>
+                    <span className="text-[11px] text-newTextColor/45">
+                      {canDrag ? 'Drag to move' : 'Published'}
+                    </span>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full border border-newTextColor/10 bg-newBgColorInner px-[8px] py-[3px] text-[11px] text-newTextColor/70">
+                  {stateLabel}
+                </span>
               </div>
-              <div className="line-clamp-4 leading-[1.45] text-[13px]">
-                {(post.content || '').replace(/<[^>]+>/g, ' ').trim() || 'No content'}
+              <div className="line-clamp-4 leading-[1.5] text-[13px] text-textColor/90">
+                {getPlainContent(post.content)}
               </div>
-              <div className="flex justify-between gap-[8px] opacity-55 text-[12px]">
-                <span>{post.state}</span>
-                <span>{dayjs.utc(post.publishDate).local().format('DD MMM YYYY HH:mm')}</span>
-              </div>
-              {transitions.length > 0 && (
-                <div className="flex flex-wrap gap-[6px] pt-[4px]">
-                  {transitions.map(({ column: targetColumn, transition }) => (
-                    <Button
-                      key={targetColumn.state}
-                      className="text-[11px] py-[4px] px-[8px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openTransition(post, targetColumn.state);
-                      }}
-                    >
-                      {transition.submitLabel}
-                    </Button>
-                  ))}
+              {post.publishDate && (
+                <div className="flex items-center justify-between gap-[8px] border-t border-newTextColor/5 pt-[9px] text-[12px] text-newTextColor/55">
+                  <span>{post.state === 'PUBLISHED' ? 'Published' : 'Publish date'}</span>
+                  <span>{dayjs.utc(post.publishDate).local().format('DD MMM YYYY HH:mm')}</span>
                 </div>
               )}
             </div>
@@ -382,7 +466,7 @@ export const Column: FC<{ column: (typeof KANBAN_COLUMNS)[number] }> = ({ column
 export const KanbanView: FC = () => {
   useCalendar();
   return (
-    <div className="flex gap-[12px] items-start overflow-x-auto p-[4px]">
+    <div className="flex gap-[14px] items-start overflow-x-auto p-[4px] pb-[10px] scrollbar scrollbar-thumb-newColColor scrollbar-track-newBgColorInner">
       {KANBAN_COLUMNS.map((c) => (
         <Column key={c.state} column={c} />
       ))}
