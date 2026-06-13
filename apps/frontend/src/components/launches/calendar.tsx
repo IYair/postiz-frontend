@@ -574,7 +574,7 @@ export const MonthView = () => {
                   }
                 }}
               >
-                <div className="absolute left-[6px] right-[6px] top-[6px] z-[10]">
+                <div className="absolute left-[8px] right-[8px] top-[34px] z-[10]">
                   <HolidayBadge
                     date={cellDate}
                     onCreatePost={createPostWithContent}

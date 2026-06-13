@@ -144,6 +144,11 @@ export const useHolidays = (date: dayjs.Dayjs) => {
   return data || [];
 };
 
+const getHolidayPostContent = (holiday: Holiday) => {
+  const hashtags = holiday.hashtags.map((x) => `#${x}`).join(' ');
+  return [holiday.name, holiday.description, hashtags].filter(Boolean).join('\n\n');
+};
+
 export const HolidayBadge: FC<{
   date: dayjs.Dayjs;
   onCreatePost?: (content: string, date: dayjs.Dayjs) => void;
@@ -157,34 +162,42 @@ export const HolidayBadge: FC<{
     (e: MouseEvent) => {
       e.stopPropagation();
       const h = todays[0];
+
+      if (!h) return;
+
+      const hashtags = h.hashtags.map((x) => `#${x}`).join(' ');
+      const postContent = getHolidayPostContent(h);
+
       modals.openModal({
         title: h.name,
         withCloseButton: true,
         children: (close: () => void) => (
           <div className="flex flex-col gap-[12px]">
-            <div className="text-[14px]">{h.description}</div>
-            <div className="text-[14px] text-forth">
-              {h.hashtags.map((x) => `#${x}`).join(' ')}
+            <div className="text-[14px] font-[600] text-textColor">
+              {h.name}
             </div>
+            {h.description && (
+              <div className="text-[14px] text-textColor/80">{h.description}</div>
+            )}
+            {!!hashtags && (
+              <div className="text-[14px] text-forth">{hashtags}</div>
+            )}
             <div className="flex gap-[8px]">
-              <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    h.hashtags.map((x) => `#${x}`).join(' ')
-                  );
-                  toaster.show('Copied', 'success');
-                }}
-              >
-                Copy hashtags
-              </Button>
+              {!!hashtags && (
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(hashtags);
+                    toaster.show('Copied', 'success');
+                  }}
+                >
+                  Copy hashtags
+                </Button>
+              )}
               {onCreatePost && (
                 <Button
                   onClick={() => {
                     close();
-                    onCreatePost(
-                      `\n\n${h.hashtags.map((x) => `#${x}`).join(' ')}`,
-                      date
-                    );
+                    onCreatePost(postContent, date);
                   }}
                 >
                   Create post
@@ -201,12 +214,26 @@ export const HolidayBadge: FC<{
   if (!todays.length) return null;
 
   return (
-    <div
+    <button
+      type="button"
       onClick={open}
       title={todays.map((h) => h.name).join(', ')}
-      className="cursor-pointer text-[10px] leading-[14px] px-[4px] rounded-[4px] bg-forth/20 text-forth truncate"
+      aria-label={`Create post for ${todays[0].name}`}
+      className="group w-full cursor-pointer rounded-[8px] border border-forth/30 bg-forth/10 px-[8px] py-[6px] text-left shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-colors hover:border-forth/60 hover:bg-forth/15 focus:outline-none focus:ring-2 focus:ring-forth/40"
     >
-      🎉 {todays[0].name}
-    </div>
+      <div className="flex items-start gap-[6px] min-w-0">
+        <span className="mt-[1px] text-[12px] leading-[14px]">🎉</span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[11px] font-[600] leading-[14px] text-forth">
+            {todays[0].name}
+          </div>
+          {!!todays[0].description && (
+            <div className="mt-[2px] line-clamp-2 text-[10px] leading-[13px] text-textColor/70">
+              {todays[0].description}
+            </div>
+          )}
+        </div>
+      </div>
+    </button>
   );
 };
