@@ -19,6 +19,10 @@ export const HOLIDAY_VISIBILITY_STORAGE_KEY = 'show-holidays';
 export const HOLIDAY_VISIBILITY_CHANGE_EVENT = 'holiday-visibility-change';
 const LEGACY_HOLIDAY_VISIBILITY_STORAGE_KEY = 'hide-holidays';
 
+export const HOLIDAY_COUNTRY_STORAGE_KEY = 'holiday-country';
+export const HOLIDAY_COUNTRY_CHANGE_EVENT = 'holiday-country-change';
+const DEFAULT_HOLIDAY_COUNTRY = 'MX';
+
 export const areHolidaysVisible = () => {
   if (typeof window === 'undefined') return true;
 
@@ -73,13 +77,63 @@ export const useHolidayVisibility = () => {
   return [visible, setVisibility] as const;
 };
 
+export const getHolidayCountry = () => {
+  if (typeof window === 'undefined') return DEFAULT_HOLIDAY_COUNTRY;
+
+  try {
+    const country = localStorage.getItem(HOLIDAY_COUNTRY_STORAGE_KEY);
+    return country || DEFAULT_HOLIDAY_COUNTRY;
+  } catch {
+    return DEFAULT_HOLIDAY_COUNTRY;
+  }
+};
+
+export const setHolidayCountry = (country: string) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(HOLIDAY_COUNTRY_STORAGE_KEY, country);
+  } catch {
+    // Storage unavailable falls back to getHolidayCountry(), which returns MX.
+  }
+
+  window.dispatchEvent(new Event(HOLIDAY_COUNTRY_CHANGE_EVENT));
+};
+
+const subscribeHolidayCountry = (onStoreChange: () => void) => {
+  window.addEventListener(HOLIDAY_COUNTRY_CHANGE_EVENT, onStoreChange);
+  window.addEventListener('storage', onStoreChange);
+
+  return () => {
+    window.removeEventListener(HOLIDAY_COUNTRY_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener('storage', onStoreChange);
+  };
+};
+
+export const useHolidayCountry = () => {
+  const country = useSyncExternalStore(
+    subscribeHolidayCountry,
+    getHolidayCountry,
+    () => DEFAULT_HOLIDAY_COUNTRY
+  );
+
+  const setCountry = useCallback((nextCountry: string) => {
+    setHolidayCountry(nextCountry);
+  }, []);
+
+  return [country, setCountry] as const;
+};
+
 export const useHolidays = (date: dayjs.Dayjs) => {
   const fetch = useFetch();
   const [holidaysVisible] = useHolidayVisibility();
+  const [country] = useHolidayCountry();
   const month = date.month() + 1;
   const year = date.year();
   const { data } = useSWR<Holiday[]>(
-    holidaysVisible ? `/tools/holidays?month=${month}&year=${year}` : null,
+    holidaysVisible
+      ? `/tools/holidays?month=${month}&year=${year}&country=${country}`
+      : null,
     async (url: string) => {
       const res = await fetch(url);
       if (!res.ok) return [];

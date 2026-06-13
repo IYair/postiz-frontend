@@ -5,8 +5,13 @@ import { createRoot, Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import {
   areHolidaysVisible,
+  getHolidayCountry,
+  HOLIDAY_COUNTRY_CHANGE_EVENT,
+  HOLIDAY_COUNTRY_STORAGE_KEY,
   HOLIDAY_VISIBILITY_CHANGE_EVENT,
+  setHolidayCountry,
   setHolidaysVisible,
+  useHolidayCountry,
   useHolidayVisibility,
   useHolidays,
 } from '@gitroom/frontend/components/tools/holidays/holiday.badge';
@@ -59,6 +64,20 @@ const VisibilityProbe = () => {
   return <span>{visible ? 'visible' : 'hidden'}</span>;
 };
 
+let setCountryFromHook: ((country: string) => void) | undefined;
+
+const CountryProbe = () => {
+  const [, setCountry] = useHolidayCountry();
+  setCountryFromHook = setCountry;
+  useHolidays(dayjs('2026-06-13'));
+  return null;
+};
+
+const CountrySnapshotProbe = () => {
+  const [country] = useHolidayCountry();
+  return <span>{country}</span>;
+};
+
 describe('holiday visibility preference', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -67,6 +86,7 @@ describe('holiday visibility preference', () => {
     localStorage.clear();
     swrCalls.length = 0;
     setHolidayVisibility = undefined;
+    setCountryFromHook = undefined;
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -80,6 +100,7 @@ describe('holiday visibility preference', () => {
     localStorage.clear();
     swrCalls.length = 0;
     setHolidayVisibility = undefined;
+    setCountryFromHook = undefined;
     vi.restoreAllMocks();
   });
 
@@ -90,7 +111,7 @@ describe('holiday visibility preference', () => {
       root.render(<Probe />);
     });
 
-    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026');
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
   });
 
   it('persists disabled holidays and prevents the holiday request', () => {
@@ -141,7 +162,7 @@ describe('holiday visibility preference', () => {
     act(() => {
       root.render(<Probe />);
     });
-    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026');
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
 
     act(() => {
       setHolidaysVisible(false);
@@ -175,7 +196,7 @@ describe('holiday visibility preference', () => {
       act(() => {
         root.render(<ToggleProbe />);
       });
-      expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026');
+      expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
 
       act(() => {
         setHolidayVisibility?.(false);
@@ -186,7 +207,7 @@ describe('holiday visibility preference', () => {
 
       expect(listener).toHaveBeenCalledTimes(1);
       expect(areHolidaysVisible()).toBe(true);
-      expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026');
+      expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
     } finally {
       window.removeEventListener(HOLIDAY_VISIBILITY_CHANGE_EVENT, listener);
       Object.defineProperty(window, 'localStorage', {
@@ -194,5 +215,76 @@ describe('holiday visibility preference', () => {
         value: storage,
       });
     }
+  });
+
+  it('uses MX as the default holiday country', () => {
+    expect(getHolidayCountry()).toBe('MX');
+
+    act(() => {
+      root.render(<Probe />);
+    });
+
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
+  });
+
+  it('persists selected holiday country and includes it in holiday requests', () => {
+    setHolidayCountry('US');
+
+    expect(getHolidayCountry()).toBe('US');
+    expect(localStorage.getItem(HOLIDAY_COUNTRY_STORAGE_KEY)).toBe('US');
+
+    act(() => {
+      root.render(<Probe />);
+    });
+
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=US');
+  });
+
+  it('notifies mounted holiday hooks when the country changes', async () => {
+    const listener = vi.fn();
+    window.addEventListener(HOLIDAY_COUNTRY_CHANGE_EVENT, listener);
+
+    act(() => {
+      root.render(<CountryProbe />);
+    });
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=MX');
+
+    act(() => {
+      setCountryFromHook?.('ES');
+    });
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+    });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(HOLIDAY_COUNTRY_STORAGE_KEY)).toBe('ES');
+    expect(swrCalls.at(-1)).toBe('/tools/holidays?month=6&year=2026&country=ES');
+
+    window.removeEventListener(HOLIDAY_COUNTRY_CHANGE_EVENT, listener);
+  });
+
+  it('keeps holiday requests disabled when holidays are hidden even if country changes', async () => {
+    setHolidaysVisible(false);
+
+    act(() => {
+      root.render(<CountryProbe />);
+    });
+    expect(swrCalls.at(-1)).toBeNull();
+
+    act(() => {
+      setCountryFromHook?.('CO');
+    });
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+    });
+
+    expect(localStorage.getItem(HOLIDAY_COUNTRY_STORAGE_KEY)).toBe('CO');
+    expect(swrCalls.at(-1)).toBeNull();
+  });
+
+  it('uses a stable MX server snapshot for holiday country', () => {
+    localStorage.setItem(HOLIDAY_COUNTRY_STORAGE_KEY, 'US');
+
+    expect(renderToString(<CountrySnapshotProbe />)).toBe('<span>MX</span>');
   });
 });
