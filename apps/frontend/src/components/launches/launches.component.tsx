@@ -673,7 +673,7 @@ export const LaunchesComponent = () => {
           id="channels-sidebar"
           className={clsx(
             'hidden lg:flex relative flex-col',
-            collapseMenu === '1' ? 'lg:group lg:sidebar lg:w-[100px]' : 'lg:w-[260px]'
+            collapseMenu === '1' ? 'group sidebar lg:w-[100px]' : 'lg:w-[260px]'
           )}
         >
           {sidebarInner}
