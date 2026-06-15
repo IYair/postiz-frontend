@@ -2,7 +2,7 @@ import XHRUpload from '@uppy/xhr-upload';
 import AwsS3Multipart from '@uppy/aws-s3';
 import sha256 from 'sha256';
 import Transloadit from '@uppy/transloadit';
-const fetchUploadApiEndpoint = async (
+export const fetchUploadApiEndpoint = async (
   fetch: any,
   endpoint: string,
   data: any
@@ -15,7 +15,13 @@ const fetchUploadApiEndpoint = async (
       'Content-Type': 'application/json',
     },
   });
-  return res.json();
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      body?.message || body?.error || `Upload request failed with ${res.status}`
+    );
+  }
+  return body;
 };
 
 // Define the factory to return appropriate Uppy configuration
