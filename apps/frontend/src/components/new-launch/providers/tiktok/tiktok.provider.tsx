@@ -124,7 +124,7 @@ const TikTokSettings: FC<{
         label={t('label_who_can_see_this_video', 'Who can see this video?')}
         disabled={isUploadMode}
         {...register('privacy_level', {
-          value: 'PUBLIC_TO_EVERYONE',
+          value: 'SELF_ONLY',
         })}
       >
         <option value="">{t('select', 'Select')}</option>
