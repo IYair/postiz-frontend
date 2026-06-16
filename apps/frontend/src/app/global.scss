@@ -1241,6 +1241,34 @@ html[dir='rtl'] [dir='ltr'] {
   max-width: calc(100% / 6);
 }
 
+@media (max-width: 1400px) {
+  .w8-max {
+    width: calc(100% / 5);
+    max-width: calc(100% / 5);
+  }
+}
+
+@media (max-width: 1025px) {
+  .w8-max {
+    width: calc(100% / 4);
+    max-width: calc(100% / 4);
+  }
+}
+
+@media (max-width: 768px) {
+  .w8-max {
+    width: calc(100% / 3);
+    max-width: calc(100% / 3);
+  }
+}
+
+@media (max-width: 480px) {
+  .w8-max {
+    width: calc(100% / 2);
+    max-width: calc(100% / 2);
+  }
+}
+
 .withp3 {
   width: calc(100% + 9px);
   height: calc(100% + 6px);
@@ -1249,6 +1277,20 @@ html[dir='rtl'] [dir='ltr'] {
 .forceChange .changeColor {
   background: var(--new-btn-primary) !important;
   color: #fff !important;
+}
+
+/* Tweet screenshot tool: tighten react-tweet and support the glass effect */
+.tw-shot .react-tweet-theme {
+  --tweet-container-margin: 0 !important;
+  margin: 0 !important;
+}
+.tw-shot[data-glass='1'] .react-tweet-theme {
+  --tweet-bg-color: var(--shot-card-bg) !important;
+  --tweet-bg-color-hover: var(--shot-card-bg) !important;
+  --tweet-border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 12px;
+  backdrop-filter: blur(var(--shot-glass-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--shot-glass-blur, 0px));
 }
 
 .text-shadow-tags {

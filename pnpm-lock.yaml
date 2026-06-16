@@ -568,6 +568,9 @@ importers:
       react-tooltip:
         specifier: ^5.26.2
         version: 5.30.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-tweet:
+        specifier: ^3.3.1
+        version: 3.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-use-cookie:
         specifier: ^1.6.1
         version: 1.6.1(react@19.2.4)
@@ -15906,6 +15909,12 @@ packages:
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
+    peerDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4
+
+  react-tweet@3.3.1:
+    resolution: {integrity: sha512-0Gj1YgBTe1K85NBMoWBlUc17Rdc67gIJLlacrVgj+3jWIoXpFfxPdZ1U5OnWkkF9zxhphqs2pY1i//JBfP3Qog==}
     peerDependencies:
       react: 19.2.4
       react-dom: 19.2.4
@@ -37353,6 +37362,14 @@ snapshots:
       prop-types: 15.8.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
+
+  react-tweet@3.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@swc/helpers': 0.5.13
+      clsx: 2.1.1
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      swr: 2.4.1(react@19.2.4)
 
   react-use-cookie@1.6.1(react@19.2.4):
     dependencies:

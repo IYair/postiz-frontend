@@ -120,7 +120,7 @@ export const Pagination: FC<{
   }, [current, totalPages]);
 
   return (
-    <ul className="flex flex-row items-center gap-1 justify-center mt-[15px]">
+    <ul className="flex flex-row flex-wrap items-center gap-1 justify-center mt-[15px]">
       <li className={clsx(current === 0 && 'opacity-20 pointer-events-none')}>
         <div
           className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 py-2 gap-1 ps-2.5 text-gray-400 hover:text-white border-[#1F1F1F] hover:bg-forth"
@@ -419,7 +419,7 @@ export const MediaBox: FC<{
       <div className="flex flex-col flex-1">
         <div
           className={clsx(
-            'flex items-center gap-[12px]',
+            'flex flex-col sm:flex-row sm:items-center gap-[12px]',
             !isLoading &&
               !data?.results?.length &&
               !debouncedSearch &&
@@ -505,7 +505,7 @@ export const MediaBox: FC<{
                     'You can also drag & drop pictures.'
                   )}
                 </div>
-                <div className="forceChange flex gap-[8px]">
+                <div className="forceChange flex flex-wrap justify-center gap-[8px]">
                   {btn}
                   <ThirdPartyMediaLibrary onImported={() => mutate()} />
                   <ImageToolsButton onImported={() => mutate()} />
